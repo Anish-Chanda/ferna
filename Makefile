@@ -52,6 +52,7 @@ go-fmt:
 
 go-clean:
 	rm -rf $(GO_BUILD_DIR)
+	rm -rf backend/data
 
 # Convenience
 .PHONY: all clean
