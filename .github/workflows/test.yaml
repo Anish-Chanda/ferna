@@ -1,0 +1,54 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - '**'  # Match all branches
+  pull_request:
+    branches:
+      - '**'  # Trigger for PRs targeting any branch
+  workflow_dispatch:     # Allow manual triggering via GitHub UI
+
+jobs:
+  test-go:
+    name: Go Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.6'
+          cache: true  # Enable Go module caching
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run Go tests
+        run: go test ./...
+
+  test-flutter:
+    name: Flutter Frontend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Run Flutter tests
+        run: flutter test
