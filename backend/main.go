@@ -84,7 +84,7 @@ func main() {
 	// setup auth routes
 	authRoutes, avaRoutes := service.Handlers()
 	r.PathPrefix("/auth").Handler(authRoutes)
-	r.Handle("/avatar", avaRoutes)
+	r.PathPrefix("/avatar").Handler(avaRoutes)
 
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)
