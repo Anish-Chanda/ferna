@@ -110,18 +110,16 @@ func (s *SQLiteDB) GetUserByEmail(ctx context.Context, email string) (*model.Use
 	}
 
 	var parseErr error
-	user.CreatedAt, parseErr = time.Parse("2006-01-02 15:04:05", createdAt)
+	user.CreatedAt, parseErr = time.Parse(time.RFC3339, createdAt)
 
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse created_at: %w", parseErr)
 	}
 
-	user.UpdatedAt, parseErr = time.Parse("2006-01-02 15:04:05", updatedAt)
+	user.UpdatedAt, parseErr = time.Parse(time.RFC3339, updatedAt)
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse updated_at: %w", parseErr)
 	}
-
-	fmt.Printf("Retrieved user: %+v\n", user)
 
 	return &user, nil
 }
