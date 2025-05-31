@@ -7,12 +7,14 @@ GO_MAIN = main.go
 
 # ==== Targets ====
 
+include .env.example
+
 # Common stuff
 all: flutter-pub go-build flutter-build
 
 test:
 	@echo "Running Go tests..."
-	cd $(BACKEND_DIR) && go test ./...
+	cd $(BACKEND_DIR) && go test --cover ./...
 	@echo "Running Flutter tests..."
 	cd $(FRONTEND_DIR) && flutter test
 
@@ -38,7 +40,7 @@ flutter-pub:
 .PHONY: go-run go-build go-lint go-fmt go-clean
 
 go-run:
-	cd $(BACKEND_DIR) && go run $(GO_MAIN)
+	@bash -c "set -a; . .env.example; set +a; cd $(BACKEND_DIR) && go run $(GO_MAIN)"
 
 go-build:
 	mkdir -p $(GO_BUILD_DIR)
