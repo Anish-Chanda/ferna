@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -38,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _showServerConfigDialog() {
+    final auth = context.read<AuthProvider>();
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -48,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen>
             controller: _serverUrlController,
             decoration: InputDecoration(
               labelText: 'Server URL',
-              hintText: 'https://your-self-hosted-ferna.com',
+              hintText: 'http://ferna.local',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -64,9 +65,15 @@ class _LoginScreenState extends State<LoginScreen>
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // TODO: Persist _serverUrlController.text with shared pref
+              onPressed: () async {
+                final newUrl = _serverUrlController.text.trim();
+                if (newUrl.isNotEmpty && newUrl != auth.serverUrl) {
+                  // Update in AuthProvider (persists to SharedPreferences, re-inits Dio)
+                  await auth.updateServerUrl(newUrl);
+                }
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -90,21 +97,12 @@ class _LoginScreenState extends State<LoginScreen>
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final serverUrl = _serverUrlController.text.trim();
 
     try {
       if (_isLogin) {
-        await auth.login(
-          email: email,
-          password: password,
-          serverUrl: serverUrl,
-        );
+        await auth.login(email: email, password: password);
       } else {
-        await auth.signUp(
-          email: email,
-          password: password,
-          serverUrl: serverUrl,
-        );
+        await auth.signUp(email: email, password: password);
       }
 
       // On success, navigate to your home screen:
@@ -271,7 +269,7 @@ class _LoginScreenState extends State<LoginScreen>
                             decoration: BoxDecoration(
                               color: _isLogin
                                   ? cs.primaryContainer
-                                  : cs.surfaceVariant,
+                                  : cs.surfaceContainerHighest,
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(12),
                                 bottomLeft: Radius.circular(12),
@@ -306,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen>
                             decoration: BoxDecoration(
                               color: !_isLogin
                                   ? cs.primaryContainer
-                                  : cs.surfaceVariant,
+                                  : cs.surfaceContainerHighest,
                               borderRadius: const BorderRadius.only(
                                 topRight: Radius.circular(12),
                                 bottomRight: Radius.circular(12),

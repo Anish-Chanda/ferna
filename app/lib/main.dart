@@ -4,15 +4,21 @@ import 'package:ferna/theme/theme_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialzie auth provider
+  final authProvider = await AuthProvider.initialize();
+
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+      ],
       child: FernaApp(),
     ),
   );
 }
-
 
 class FernaApp extends StatelessWidget {
   const FernaApp({super.key});
@@ -27,9 +33,7 @@ class FernaApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       // TODO: Replace with router
       home: const LoginScreen(),
-      routes: {
-        '/home': (_) => const HomeScreen(),
-      },
+      routes: {'/home': (_) => const HomeScreen()},
     );
   }
 }
@@ -39,6 +43,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const Placeholder(child: Text(":)"));
   }
 }
