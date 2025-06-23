@@ -45,7 +45,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
+#ignore data dir
+data/
 
 # ignore build outputs
 bin/

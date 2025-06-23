@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -65,7 +66,19 @@ func main() {
 		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
 		Issuer:         "ferna",
 		URL:            baseUrl,
-		AvatarStore:    avatar.NewLocalFS("/tmp"),
+		DisableXSRF:    true,
+		ClaimsUpd: token.ClaimsUpdFunc(func(cl token.Claims) token.Claims {
+			if cl.User.Name == "" {
+				return cl
+			}
+			u, err := database.GetUserByEmail(context.TODO(), cl.User.Name)
+			if err != nil || u == nil {
+				return cl
+			}
+			cl.User.SetStrAttr("uid", fmt.Sprint(u.ID))
+			return cl
+		}),
+		AvatarStore: avatar.NewLocalFS("/tmp"),
 	}
 
 	// create auth service with providers
