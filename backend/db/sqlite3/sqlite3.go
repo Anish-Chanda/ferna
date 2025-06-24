@@ -123,3 +123,61 @@ func (s *SQLiteDB) GetUserByEmail(ctx context.Context, email string) (*model.Use
 
 	return &user, nil
 }
+
+func (s *SQLiteDB) SearchSpecies(ctx context.Context, query string, limit, offset int) ([]*model.Species, error) {
+	pattern := "%" + query + "%"
+	rows, err := s.db.QueryContext(ctx, `
+        SELECT id, common_name, scientific_name,
+               default_watering_frequency_days, created_at, updated_at
+          FROM species
+         WHERE common_name   LIKE ? 
+            OR scientific_name LIKE ?
+         ORDER BY common_name
+         LIMIT ? OFFSET ?`,
+		pattern, pattern, limit, offset,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error searching species query: %w", err)
+	}
+
+	defer rows.Close()
+
+	var res []*model.Species
+	for rows.Next() {
+		var sp model.Species
+		var created, updated string
+		if err := rows.Scan(&sp.ID,
+			&sp.CommonName,
+			&sp.ScientificName,
+			&sp.DefaultWateringFrequency,
+			&created,
+			&updated); err != nil {
+			return nil, fmt.Errorf("scan species: %w", err)
+		}
+
+		//parse time
+		sp.CreatedAt, err = time.Parse(time.RFC3339, created)
+		if err != nil {
+			return nil, fmt.Errorf("parse created_at: %w", err)
+		}
+		sp.UpdatedAt, err = time.Parse(time.RFC3339, updated)
+		if err != nil {
+			return nil, fmt.Errorf("parse updated_at: %w", err)
+		}
+		res = append(res, &sp)
+
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate species rows: %w", err)
+	}
+	return res, nil
+}
+
+// ExecContext executes a query with context that doesn't return rows, like insert, delete etc
+func (s *SQLiteDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	result, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	return result, nil
+}

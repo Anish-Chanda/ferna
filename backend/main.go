@@ -12,6 +12,8 @@ import (
 	myAuth "github.com/anish-chanda/ferna/auth"
 	"github.com/anish-chanda/ferna/db"
 	"github.com/anish-chanda/ferna/db/sqlite3"
+	"github.com/anish-chanda/ferna/handlers"
+	"github.com/anish-chanda/ferna/seed"
 	"github.com/go-pkgz/auth/v2"
 	"github.com/go-pkgz/auth/v2/avatar"
 	"github.com/go-pkgz/auth/v2/provider"
@@ -53,6 +55,12 @@ func main() {
 
 	if err := database.Migrate(); err != nil {
 		log.Fatalf("run migrations: %v", err)
+	}
+
+	// Seed the species table
+	fmt.Println("Seeding species data...")
+	if err := seed.SeedSpecies(context.Background(), database); err != nil {
+		log.Fatalf("seed species: %v", err)
 	}
 
 	fmt.Println("Database connected and migrated successfully!")
@@ -98,6 +106,9 @@ func main() {
 	authRoutes, avaRoutes := service.Handlers()
 	r.PathPrefix("/auth").Handler(authRoutes)
 	r.PathPrefix("/avatar").Handler(avaRoutes)
+
+	// register species endpoint
+	r.HandleFunc("/api/plants/species", handlers.SearchSpecies(database)).Methods("GET")
 
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)

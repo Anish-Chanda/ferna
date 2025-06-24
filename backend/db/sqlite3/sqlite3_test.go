@@ -189,3 +189,143 @@ func TestCloseThenUse(t *testing.T) {
 	require.Error(t, err, "GetUserByEmail after Close() should error")
 	assert.Contains(t, err.Error(), "database is closed", "Error should mention that the DB is closed")
 }
+
+// TestExecContext verifies that ExecContext works correctly for INSERT, UPDATE, DELETE operations
+func TestExecContext_Insert(t *testing.T) {
+	sq := setupInMemoryDB(t)
+	defer sq.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// Test INSERT using ExecContext
+	result, err := sq.ExecContext(ctx,
+		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Test Plant", "Testus plantus", 7)
+	require.NoError(t, err)
+
+	// Check that the insert was successful
+	rowsAffected, err := result.RowsAffected()
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), rowsAffected)
+
+	// Verify the record was inserted by searching for it
+	species, err := sq.SearchSpecies(ctx, "Test Plant", 10, 0)
+	require.NoError(t, err)
+	require.Len(t, species, 1)
+	assert.Equal(t, "Test Plant", species[0].CommonName)
+	assert.Equal(t, "Testus plantus", species[0].ScientificName)
+	assert.Equal(t, 7, species[0].DefaultWateringFrequency)
+}
+
+func TestExecContext_InsertOrIgnore(t *testing.T) {
+	sq := setupInMemoryDB(t)
+	defer sq.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// First insert
+	result1, err := sq.ExecContext(ctx,
+		`INSERT OR IGNORE INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Rose", "Rosa rubiginosa", 3)
+	require.NoError(t, err)
+
+	rowsAffected, err := result1.RowsAffected()
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), rowsAffected)
+
+	// Second insert with same scientific_name should be ignored due to UNIQUE constraint
+	result2, err := sq.ExecContext(ctx,
+		`INSERT OR IGNORE INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Different Rose", "Rosa rubiginosa", 5)
+	require.NoError(t, err)
+
+	rowsAffected, err = result2.RowsAffected()
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), rowsAffected) // Should be 0 because it was ignored
+
+	// Verify only one record exists
+	species, err := sq.SearchSpecies(ctx, "Rosa rubiginosa", 10, 0)
+	require.NoError(t, err)
+	require.Len(t, species, 1)
+	assert.Equal(t, "Rose", species[0].CommonName) // Should still be the original
+}
+
+func TestExecContext_Update(t *testing.T) {
+	sq := setupInMemoryDB(t)
+	defer sq.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// First insert a record
+	_, err := sq.ExecContext(ctx,
+		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Cactus", "Cactaceae genericus", 14)
+	require.NoError(t, err)
+
+	// Update the watering frequency
+	result, err := sq.ExecContext(ctx,
+		`UPDATE species SET default_watering_frequency_days = ? WHERE scientific_name = ?`,
+		21, "Cactaceae genericus")
+	require.NoError(t, err)
+
+	rowsAffected, err := result.RowsAffected()
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), rowsAffected)
+
+	// Verify the update
+	species, err := sq.SearchSpecies(ctx, "Cactus", 10, 0)
+	require.NoError(t, err)
+	require.Len(t, species, 1)
+	assert.Equal(t, 21, species[0].DefaultWateringFrequency)
+}
+
+func TestExecContext_Delete(t *testing.T) {
+	sq := setupInMemoryDB(t)
+	defer sq.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// First insert a record
+	_, err := sq.ExecContext(ctx,
+		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Temporary Plant", "Temporarius plantus", 1)
+	require.NoError(t, err)
+
+	// Verify it exists
+	species, err := sq.SearchSpecies(ctx, "Temporary Plant", 10, 0)
+	require.NoError(t, err)
+	require.Len(t, species, 1)
+
+	// Delete the record
+	result, err := sq.ExecContext(ctx,
+		`DELETE FROM species WHERE scientific_name = ?`,
+		"Temporarius plantus")
+	require.NoError(t, err)
+
+	rowsAffected, err := result.RowsAffected()
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), rowsAffected)
+
+	// Verify it's gone
+	species, err = sq.SearchSpecies(ctx, "Temporary Plant", 10, 0)
+	require.NoError(t, err)
+	assert.Len(t, species, 0)
+}
+
+func TestExecContext_CanceledContext(t *testing.T) {
+	sq := setupInMemoryDB(t)
+	defer sq.Close()
+
+	// Create a context and cancel it immediately
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+	cancel()
+	time.Sleep(5 * time.Millisecond) // allow cancellation to propagate
+
+	// ExecContext with canceled context should error
+	_, err := sq.ExecContext(ctx,
+		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
+		"Test", "Test", 1)
+	require.Error(t, err, "ExecContext should error on canceled context")
+	assert.True(t, errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded),
+		"Error should be context.Canceled or DeadlineExceeded")
+}

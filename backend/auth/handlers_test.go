@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -34,11 +35,15 @@ func (f *fakeDB) CreateUser(ctx context.Context, email, passHash string) (int64,
 }
 
 // Unused methods to satisfy interface:
-func (f *fakeDB) Connect(dsn string) error                               { return nil }
-func (f *fakeDB) Close() error                                           { return nil }
-func (f *fakeDB) Migrate() error                                         { return nil }
-func (f *fakeDB) SomeUnusedMethod1()                                     { /* no-op */ }
-func (f *fakeDB) SomeUnusedMethod2(arg interface{}) (interface{}, error) { return nil, nil }
+func (f *fakeDB) Connect(dsn string) error { return nil }
+func (f *fakeDB) Close() error             { return nil }
+func (f *fakeDB) Migrate() error           { return nil }
+func (f *fakeDB) SearchSpecies(ctx context.Context, query string, limit, offset int) ([]*model.Species, error) {
+	return nil, nil
+}
+func (f *fakeDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return nil, nil
+}
 
 //-----------------------
 // Tests for HandleLogin
