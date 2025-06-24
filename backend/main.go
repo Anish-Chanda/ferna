@@ -107,6 +107,9 @@ func main() {
 	r.PathPrefix("/auth").Handler(authRoutes)
 	r.PathPrefix("/avatar").Handler(avaRoutes)
 
+	// register species endpoint
+	r.HandleFunc("/api/plants/species", handlers.SearchSpecies(database)).Methods("GET")
+
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)
 }
