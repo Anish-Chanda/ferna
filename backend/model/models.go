@@ -18,3 +18,17 @@ type Species struct {
 	CreatedAt                time.Time `json:"created_at"`
 	UpdatedAt                time.Time `json:"updated_at"`
 }
+
+// Plant represents a user’s individual plant.
+type Plant struct {
+	ID                    int64      `json:"id"`
+	UserID                int64      `json:"user_id"`
+	SpeciesID             int64      `json:"species_id"`
+	Nickname              *string    `json:"nickname"`
+	ImageURL              *string    `json:"image_url"`
+	WateringFrequencyDays int        `json:"watering_frequency_days"`
+	LastWateredAt         *time.Time `json:"last_watered_at"`
+	Note                  *string    `json:"note"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
+}
