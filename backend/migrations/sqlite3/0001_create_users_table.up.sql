@@ -15,6 +15,23 @@ CREATE TABLE IF NOT EXISTS species (
     updated_at                     DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS plants (
+    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id                    INTEGER NOT NULL
+                                  REFERENCES users(id)
+                                  ON DELETE CASCADE,
+    species_id                 INTEGER NOT NULL
+                                  REFERENCES species(id)
+                                  ON DELETE RESTRICT,
+    nickname                   TEXT,
+    image_url                  TEXT,
+    watering_frequency_days    INTEGER NOT NULL,
+    last_watered_at            DATETIME,
+    note                       TEXT,
+    created_at                 DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- triggers, updates updated_at for users and species tables 
 CREATE TRIGGER IF NOT EXISTS update_species_updated_at
 AFTER UPDATE ON species
@@ -32,6 +49,15 @@ BEGIN
   UPDATE users
      SET updated_at = CURRENT_TIMESTAMP
    WHERE id = OLD.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_plants_updated_at
+AFTER UPDATE ON plants
+FOR EACH ROW
+BEGIN
+    UPDATE plants
+       SET updated_at = CURRENT_TIMESTAMP
+     WHERE id = OLD.id;
 END;
 
 -- indexes
