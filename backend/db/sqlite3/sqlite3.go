@@ -173,6 +173,29 @@ func (s *SQLiteDB) SearchSpecies(ctx context.Context, query string, limit, offse
 	return res, nil
 }
 
+func (s *SQLiteDB) GetSpeciesByID(ctx context.Context, speciesID int64) (*model.Species, error) {
+	row := s.db.QueryRowContext(ctx, `
+        SELECT id, common_name, scientific_name, default_watering_frequency_days, created_at, updated_at
+        FROM species
+        WHERE id = ?`, speciesID)
+
+	var sp model.Species
+	var created, updated sql.NullString
+	if err := row.Scan(
+		&sp.ID, &sp.CommonName, &sp.ScientificName, &sp.DefaultWateringFrequency,
+		&created, &updated,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("GetSpeciesByID: %w", err)
+	}
+
+	sp.CreatedAt, _ = time.Parse(time.RFC3339, created.String)
+	sp.UpdatedAt, _ = time.Parse(time.RFC3339, updated.String)
+	return &sp, nil
+}
+
 // ExecContext executes a query with context that doesn't return rows, like insert, delete etc
 func (s *SQLiteDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	result, err := s.db.ExecContext(ctx, query, args...)
