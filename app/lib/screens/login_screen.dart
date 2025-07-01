@@ -105,9 +105,8 @@ class _LoginScreenState extends State<LoginScreen>
         await auth.signUp(email: email, password: password);
       }
 
-      // On success, navigate to your home screen:
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      // AuthWrapper will automatically handle navigation to home screen
+      // when auth.isAuthenticated becomes true
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

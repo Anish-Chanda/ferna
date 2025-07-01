@@ -9,8 +9,16 @@ import '../services/storage_service.dart';
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService.instance;
   AuthProvider._();
+  
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+  
+  bool _isCheckingAuthState = false;
+  bool get isCheckingAuthState => _isCheckingAuthState;
+  
+  bool _isAuthenticated = false;
+  bool get isAuthenticated => _isAuthenticated;
+  
   String _serverUrl = '';
   String get serverUrl => _serverUrl;
 
@@ -25,7 +33,25 @@ class AuthProvider with ChangeNotifier {
     // Initialize AuthService (sets up Dio & loads any persisted cookies).
     await provider._authService.initialize(serverUrl: provider._serverUrl);
 
+    // Check if user is already authenticated
+    await provider._checkAuthState();
+
     return provider;
+  }
+
+  /// Check authentication state by making a test API call
+  Future<void> _checkAuthState() async {
+    _isCheckingAuthState = true;
+    notifyListeners();
+
+    try {
+      _isAuthenticated = await _authService.checkAuthState();
+    } catch (e) {
+      _isAuthenticated = false;
+    }
+
+    _isCheckingAuthState = false;
+    notifyListeners();
   }
 
   /// Change serverUrl, persist it, and re-initialize Dio so its baseUrl updates.
@@ -50,9 +76,11 @@ class AuthProvider with ChangeNotifier {
 
     try {
       await _authService.login(email: email, password: password);
+      _isAuthenticated = true;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
+      _isAuthenticated = false;
       _isLoading = false;
       notifyListeners();
       rethrow;
@@ -68,13 +96,32 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
       );
+      _isAuthenticated = true;
       _isLoading = false;
       notifyListeners();
       return userId;
     } catch (e) {
+      _isAuthenticated = false;
       _isLoading = false;
       notifyListeners();
       rethrow;
     }
+  }
+
+  /// Logout user and clear authentication state
+  Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _authService.logout();
+      _isAuthenticated = false;
+    } catch (e) {
+      // Even if logout fails, clear local state
+      _isAuthenticated = false;
+    }
+
+    _isLoading = false;
+    notifyListeners();
   }
 }
