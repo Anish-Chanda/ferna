@@ -90,8 +90,8 @@ func main() {
 	}
 
 	// create auth service with providers
-	service := auth.NewService(authOptions)
-	service.AddDirectProvider("local", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
+	authService := auth.NewService(authOptions)
+	authService.AddDirectProvider("local", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
 		return myAuth.HandleLogin(database, user, password)
 	}))
 
@@ -103,12 +103,22 @@ func main() {
 	}).Methods("POST")
 
 	// setup auth routes
-	authRoutes, avaRoutes := service.Handlers()
+	authRoutes, avaRoutes := authService.Handlers()
 	r.PathPrefix("/auth").Handler(authRoutes)
 	r.PathPrefix("/avatar").Handler(avaRoutes)
 
-	// register species endpoint
-	r.HandleFunc("/api/plants/species", handlers.SearchSpecies(database)).Methods("GET")
+	// create middleware and mount api endpoints
+	authMiddleware := authService.Middleware()
+	apiRouter := r.PathPrefix("/api").Subrouter()
+	apiRouter.Use(authMiddleware.Auth)
+	apiRouter.HandleFunc("/plants/species", handlers.SearchSpecies(database)).Methods("GET")
+
+	// plant routes
+	apiRouter.HandleFunc("/plants", handlers.CreatePlant(database)).Methods("POST")
+	apiRouter.HandleFunc("/plants", handlers.ListPlants(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.GetPlant(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.UpdatePlant(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.DeletePlant(database)).Methods("DELETE")
 
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)

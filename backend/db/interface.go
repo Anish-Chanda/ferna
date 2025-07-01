@@ -32,6 +32,8 @@ type Database interface {
 	DeletePlant(ctx context.Context, userID, plantID int64) error
 	// SearchSpecies searches for species by common or scientific name.
 	SearchSpecies(ctx context.Context, query string, limit, offset int) ([]*model.Species, error)
+	// get species with a ID
+	GetSpeciesByID(ctx context.Context, speciesID int64) (*model.Species, error)
 
 	// ---- other stuff -----
 
