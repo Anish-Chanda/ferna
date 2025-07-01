@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	myAuth "github.com/anish-chanda/ferna/auth"
 	"github.com/anish-chanda/ferna/db"
 	"github.com/anish-chanda/ferna/db/sqlite3"
+	"github.com/anish-chanda/ferna/handlers"
+	"github.com/anish-chanda/ferna/seed"
 	"github.com/go-pkgz/auth/v2"
 	"github.com/go-pkgz/auth/v2/avatar"
 	"github.com/go-pkgz/auth/v2/provider"
@@ -54,6 +57,12 @@ func main() {
 		log.Fatalf("run migrations: %v", err)
 	}
 
+	// Seed the species table
+	fmt.Println("Seeding species data...")
+	if err := seed.SeedSpecies(context.Background(), database); err != nil {
+		log.Fatalf("seed species: %v", err)
+	}
+
 	fmt.Println("Database connected and migrated successfully!")
 
 	// setup auth options
@@ -65,12 +74,24 @@ func main() {
 		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
 		Issuer:         "ferna",
 		URL:            baseUrl,
-		AvatarStore:    avatar.NewLocalFS("/tmp"),
+		DisableXSRF:    true,
+		ClaimsUpd: token.ClaimsUpdFunc(func(cl token.Claims) token.Claims {
+			if cl.User.Name == "" {
+				return cl
+			}
+			u, err := database.GetUserByEmail(context.TODO(), cl.User.Name)
+			if err != nil || u == nil {
+				return cl
+			}
+			cl.User.SetStrAttr("uid", fmt.Sprint(u.ID))
+			return cl
+		}),
+		AvatarStore: avatar.NewLocalFS("/tmp"),
 	}
 
 	// create auth service with providers
-	service := auth.NewService(authOptions)
-	service.AddDirectProvider("local", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
+	authService := auth.NewService(authOptions)
+	authService.AddDirectProvider("local", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
 		return myAuth.HandleLogin(database, user, password)
 	}))
 
@@ -82,9 +103,22 @@ func main() {
 	}).Methods("POST")
 
 	// setup auth routes
-	authRoutes, avaRoutes := service.Handlers()
+	authRoutes, avaRoutes := authService.Handlers()
 	r.PathPrefix("/auth").Handler(authRoutes)
 	r.PathPrefix("/avatar").Handler(avaRoutes)
+
+	// create middleware and mount api endpoints
+	authMiddleware := authService.Middleware()
+	apiRouter := r.PathPrefix("/api").Subrouter()
+	apiRouter.Use(authMiddleware.Auth)
+	apiRouter.HandleFunc("/plants/species", handlers.SearchSpecies(database)).Methods("GET")
+
+	// plant routes
+	apiRouter.HandleFunc("/plants", handlers.CreatePlant(database)).Methods("POST")
+	apiRouter.HandleFunc("/plants", handlers.ListPlants(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.GetPlant(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.UpdatePlant(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/plants/{plantID}", handlers.DeletePlant(database)).Methods("DELETE")
 
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)
