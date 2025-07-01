@@ -303,12 +303,18 @@ func (s *SQLiteDB) UpdatePlant(ctx context.Context, p *model.Plant) error {
 		p.WateringFrequencyDays, p.LastWateredAt, p.Note,
 		p.ID, p.UserID,
 	)
-	return fmt.Errorf("UpdatePlant: %w", err)
+	if err != nil {
+		return fmt.Errorf("UpdatePlant: %w", err)
+	}
+	return nil
 }
 
 // DeletePlant removes a plant by its ID and owner.
 func (s *SQLiteDB) DeletePlant(ctx context.Context, userID, plantID int64) error {
 	_, err := s.db.ExecContext(ctx,
 		`DELETE FROM plants WHERE id = ? AND user_id = ?`, plantID, userID)
-	return fmt.Errorf("DeletePlant: %w", err)
+	if err != nil {
+		return fmt.Errorf("DeletePlant: %w", err)
+	}
+	return nil
 }
