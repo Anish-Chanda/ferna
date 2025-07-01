@@ -41,9 +41,21 @@ func (f *fakeDB) Migrate() error           { return nil }
 func (f *fakeDB) SearchSpecies(ctx context.Context, query string, limit, offset int) ([]*model.Species, error) {
 	return nil, nil
 }
+func (f *fakeDB) GetSpeciesByID(ctx context.Context, speciesID int64) (*model.Species, error) {
+	return nil, nil
+}
 func (f *fakeDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	return nil, nil
 }
+func (f *fakeDB) CreatePlant(ctx context.Context, p *model.Plant) (int64, error) { return 0, nil }
+func (f *fakeDB) GetPlantByID(ctx context.Context, userID, plantID int64) (*model.Plant, error) {
+	return nil, nil
+}
+func (f *fakeDB) ListPlants(ctx context.Context, userID int64, limit, offset int) ([]*model.Plant, error) {
+	return nil, nil
+}
+func (f *fakeDB) UpdatePlant(ctx context.Context, p *model.Plant) error        { return nil }
+func (f *fakeDB) DeletePlant(ctx context.Context, userID, plantID int64) error { return nil }
 
 //-----------------------
 // Tests for HandleLogin
