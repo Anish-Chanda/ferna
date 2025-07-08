@@ -3,7 +3,7 @@ name: Run Tests
 on:
   push:
     branches:
-      - '**'  # Match all branches
+      - 'main'
   pull_request:
     branches:
       - '**'  # Trigger for PRs targeting any branch
