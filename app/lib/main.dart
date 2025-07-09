@@ -3,9 +3,13 @@ import 'package:ferna/router.dart';
 import 'package:ferna/theme/theme_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize date formatting for table_calendar
+  await initializeDateFormatting();
 
   // Initialize auth provider
   final authProvider = await AuthProvider.initialize();
