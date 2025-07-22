@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/home_tab.dart';
+import '../widgets/plants_tab.dart';
 import '../widgets/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,7 +13,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [const HomeTab(), const ProfileTab()];
+  final List<Widget> _pages = [
+    const HomeTab(),
+    const PlantsTab(),
+    const ProfileTab(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +35,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.local_florist_outlined),
+            selectedIcon: Icon(Icons.local_florist),
+            label: 'Plants',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

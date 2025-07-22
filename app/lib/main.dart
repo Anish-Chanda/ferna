@@ -1,4 +1,5 @@
 import 'package:ferna/providers/auth_provider.dart';
+import 'package:ferna/providers/plant_provider.dart';
 import 'package:ferna/router.dart';
 import 'package:ferna/theme/theme_data.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+        ChangeNotifierProvider<PlantProvider>(create: (_) => PlantProvider()),
       ],
       child: const FernaApp(),
     ),
