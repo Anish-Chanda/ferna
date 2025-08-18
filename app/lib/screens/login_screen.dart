@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  /// Called when “Login” or “Sign Up” button is pressed.
+  // Called when “Login” or “Sign Up” button is pressed.
   Future<void> _onSubmit() async {
     final auth = context.read<AuthProvider>();
     if (!_formKey.currentState!.validate()) return;
@@ -105,9 +105,8 @@ class _LoginScreenState extends State<LoginScreen>
         await auth.signUp(email: email, password: password);
       }
 
-      // On success, navigate to your home screen:
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      // AuthWrapper will automatically handle navigation to home screen
+      // when auth.isAuthenticated becomes true
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -120,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  /// Builds the “Email” TextFormField.
+  // Builds the “Email” TextFormField.
   Widget _buildEmailField(ColorScheme cs) {
     return TextFormField(
       controller: _emailController,
@@ -146,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  /// Builds the “Password” TextFormField.
+  // Builds the “Password” TextFormField.
   Widget _buildPasswordField(ColorScheme cs) {
     return TextFormField(
       controller: _passwordController,
@@ -176,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  /// Builds the “Confirm Password” TextFormField (only in Sign Up mode).
+  // Builds the “Confirm Password” TextFormField (only in Sign Up mode).
   Widget _buildConfirmField(ColorScheme cs) {
     return TextFormField(
       controller: _confirmPasswordController,
