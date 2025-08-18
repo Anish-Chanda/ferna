@@ -22,6 +22,9 @@ class AuthProvider with ChangeNotifier {
   String _serverUrl = '';
   String get serverUrl => _serverUrl;
 
+  String _email = '';
+  String get email => _email;
+
   // Must call this before using any other AuthProvider methods.
   static Future<AuthProvider> initialize() async {
     final provider = AuthProvider._();
@@ -39,7 +42,7 @@ class AuthProvider with ChangeNotifier {
     return provider;
   }
 
-  /// Check authentication state by making a test API call
+  // Check authentication state by making a test API call
   Future<void> _checkAuthState() async {
     _isCheckingAuthState = true;
     notifyListeners();
@@ -54,7 +57,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Change serverUrl, persist it, and re-initialize Dio so its baseUrl updates.
+  // Change serverUrl, persist it, and re-initialize Dio so its baseUrl updates.
   Future<void> updateServerUrl(String newUrl) async {
     if (newUrl == _serverUrl) return;
 
@@ -78,6 +81,7 @@ class AuthProvider with ChangeNotifier {
       await _authService.login(email: email, password: password);
       _isAuthenticated = true;
       _isLoading = false;
+      _email = email;
       notifyListeners();
     } catch (e) {
       _isAuthenticated = false;
@@ -108,7 +112,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Logout user and clear authentication state
+  // Logout user and clear authentication state
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();

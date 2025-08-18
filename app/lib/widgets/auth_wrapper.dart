@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/login_screen.dart';
 
-/// Wrapper that checks authentication state and routes to appropriate screen
+// Wrapper that checks authentication state and routes to appropriate screen
 class AuthWrapper extends StatelessWidget {
   final Widget authenticatedChild;
 

@@ -19,16 +19,13 @@ class ProfileTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Text(
-                'Profile',
-                style: theme.textTheme.headlineLarge,
-              ),
+              Text('Profile', style: theme.textTheme.headlineLarge),
               const SizedBox(height: 24),
-              
+
               // Profile Card
               _buildProfileCard(context, auth),
               const SizedBox(height: 24),
-              
+
               // Settings Section
               _buildSectionHeader(context, 'Settings'),
               const SizedBox(height: 16),
@@ -41,7 +38,9 @@ class ProfileTab extends StatelessWidget {
                   onTap: () {
                     // TODO: Navigate to notifications settings
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notifications settings coming soon!')),
+                      const SnackBar(
+                        content: Text('Notifications settings coming soon!'),
+                      ),
                     );
                   },
                 ),
@@ -54,7 +53,9 @@ class ProfileTab extends StatelessWidget {
                   onTap: () {
                     // TODO: Navigate to theme settings
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Theme settings coming soon!')),
+                      const SnackBar(
+                        content: Text('Theme settings coming soon!'),
+                      ),
                     );
                   },
                 ),
@@ -67,13 +68,15 @@ class ProfileTab extends StatelessWidget {
                   onTap: () {
                     // TODO: Navigate to language settings
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Language settings coming soon!')),
+                      const SnackBar(
+                        content: Text('Language settings coming soon!'),
+                      ),
                     );
                   },
                 ),
               ]),
               const SizedBox(height: 24),
-              
+
               // Account Section
               _buildSectionHeader(context, 'Account'),
               const SizedBox(height: 16),
@@ -87,35 +90,9 @@ class ProfileTab extends StatelessWidget {
                     _showServerConfigDialog(context, auth);
                   },
                 ),
-                _buildDivider(context),
-                _buildSettingItem(
-                  context: context,
-                  icon: Icons.privacy_tip_outlined,
-                  title: 'Privacy Policy',
-                  subtitle: 'View our privacy policy',
-                  onTap: () {
-                    // TODO: Navigate to privacy policy
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Privacy policy coming soon!')),
-                    );
-                  },
-                ),
-                _buildDivider(context),
-                _buildSettingItem(
-                  context: context,
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  subtitle: 'Get help with using the app',
-                  onTap: () {
-                    // TODO: Navigate to help
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Help & support coming soon!')),
-                    );
-                  },
-                ),
               ]),
               const SizedBox(height: 24),
-              
+
               // Logout Button
               _buildLogoutButton(context, auth),
               const SizedBox(height: 32),
@@ -128,7 +105,7 @@ class ProfileTab extends StatelessWidget {
 
   Widget _buildProfileCard(BuildContext context, AuthProvider auth) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Card(
         child: Padding(
@@ -146,17 +123,17 @@ class ProfileTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // User Email
-              Text(
-                auth.isAuthenticated ? 'user@example.com' : 'Not logged in',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text(auth.email, style: theme.textTheme.titleLarge),
               const SizedBox(height: 4),
-              
+
               // User Status
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.chipTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(12),
@@ -175,16 +152,11 @@ class ProfileTab extends StatelessWidget {
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     final theme = Theme.of(context);
-    return Text(
-      title,
-      style: theme.textTheme.titleLarge,
-    );
+    return Text(title, style: theme.textTheme.titleLarge);
   }
 
   Widget _buildSettingsCard(BuildContext context, List<Widget> children) {
-    return Card(
-      child: Column(children: children),
-    );
+    return Card(child: Column(children: children));
   }
 
   Widget _buildSettingItem({
@@ -209,11 +181,7 @@ class ProfileTab extends StatelessWidget {
                 color: theme.chipTheme.backgroundColor,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -251,17 +219,14 @@ class ProfileTab extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Divider(
-        height: 1,
-        color: theme.dividerTheme.color,
-      ),
+      child: Divider(height: 1, color: theme.dividerTheme.color),
     );
   }
 
   Widget _buildLogoutButton(BuildContext context, AuthProvider auth) {
     final theme = Theme.of(context);
     final errorColor = theme.colorScheme.error;
-    
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -295,7 +260,7 @@ class ProfileTab extends StatelessWidget {
 
   void _showLogoutDialog(BuildContext context, AuthProvider auth) {
     final theme = Theme.of(context);
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {

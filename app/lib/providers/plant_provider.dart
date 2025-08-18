@@ -18,7 +18,7 @@ class PlantProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  /// Fetch all plants for the current user
+  // Fetch all plants for the current user
   Future<void> fetchPlants({int limit = 20, int offset = 0}) async {
     _isLoading = true;
     _error = null;
@@ -36,7 +36,7 @@ class PlantProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Get a specific plant by ID
+  // Get a specific plant by ID
   Plant? getPlantById(int id) {
     try {
       return _plants.firstWhere((plant) => plant.id == id);
@@ -45,7 +45,7 @@ class PlantProvider with ChangeNotifier {
     }
   }
 
-  /// Create a new plant
+  // Create a new plant
   Future<Plant?> createPlant({
     required int speciesId,
     String? nickname,
@@ -74,7 +74,7 @@ class PlantProvider with ChangeNotifier {
     }
   }
 
-  /// Update an existing plant
+  // Update an existing plant
   Future<Plant?> updatePlant({
     required int plantId,
     int? speciesId,
@@ -108,7 +108,7 @@ class PlantProvider with ChangeNotifier {
     }
   }
 
-  /// Delete a plant
+  // Delete a plant
   Future<bool> deletePlant(int plantId) async {
     try {
       await _plantService.deletePlant(plantId);
@@ -122,13 +122,13 @@ class PlantProvider with ChangeNotifier {
     }
   }
 
-  /// Clear error message
+  // Clear error message
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  /// Refresh plants list
+  // Refresh plants list
   Future<void> refreshPlants() async {
     await fetchPlants();
   }

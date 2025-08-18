@@ -10,7 +10,7 @@ class AuthService {
     await HttpClient.instance.init(baseUrl: serverUrl);
   }
 
-  /// Sign up a new user. Returns the user_id on success.
+  // Sign up a new user. Returns the user_id on success.
   Future<int> signup({required String email, required String password}) async {
     final dio = HttpClient.instance.dio;
     final response = await dio.post(
@@ -49,7 +49,7 @@ class AuthService {
     }
   }
 
-  /// Check if user is currently authenticated by making a test API call
+  // Check if user is currently authenticated by making a test API call
   Future<bool> checkAuthState() async {
     try {
       final dio = HttpClient.instance.dio;
@@ -67,7 +67,7 @@ class AuthService {
     }
   }
 
-  /// Logout user by clearing cookies
+  // Logout user by clearing cookies
   Future<void> logout() async {
     await HttpClient.instance.clearCookies();
   }

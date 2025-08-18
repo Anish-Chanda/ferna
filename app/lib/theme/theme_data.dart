@@ -8,10 +8,10 @@ class FernaTheme {
   static const Color _lightGrey = Color(0xFFF5F5F5);
   static const Color _tealLight = Color(0xFFE6FFFA);
 
-  /// Light theme
+  // Light theme
   static final ThemeData light = _buildTheme(Brightness.light);
 
-  /// Dark theme
+  // Dark theme
   static final ThemeData dark = _buildTheme(Brightness.dark);
 
   static ThemeData _buildTheme(Brightness brightness) {

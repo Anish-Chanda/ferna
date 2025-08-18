@@ -6,7 +6,7 @@ class SpeciesService {
 
   static final SpeciesService instance = SpeciesService._();
 
-  /// Search for species by query
+  // Search for species by query
   Future<List<Species>> searchSpecies({
     required String query,
     int limit = 20,
@@ -33,7 +33,7 @@ class SpeciesService {
     }
   }
 
-  /// Get a specific species by ID
+  // Get a specific species by ID
   Future<Species?> getSpecies(int speciesId) async {
     final dio = HttpClient.instance.dio;
     

@@ -18,6 +18,11 @@ test:
 	@echo "Running Flutter tests..."
 	cd $(FRONTEND_DIR) && flutter test
 
+install:
+	@echo "Installing dependencies..."
+	cd $(FRONTEND_DIR) && flutter pub get
+	cd $(BACKEND_DIR) && go mod tidy
+
 clean: flutter-clean go-clean
 
 # Flutter (Frontend)

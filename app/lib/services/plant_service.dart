@@ -6,7 +6,7 @@ class PlantService {
 
   static final PlantService instance = PlantService._();
 
-  /// Fetch all plants for the current user
+  // Fetch all plants for the current user
   Future<List<Plant>> getUserPlants({int limit = 20, int offset = 0}) async {
     final dio = HttpClient.instance.dio;
     
@@ -28,7 +28,7 @@ class PlantService {
     }
   }
 
-  /// Get a specific plant by ID
+  // Get a specific plant by ID
   Future<Plant?> getPlant(int plantId) async {
     final dio = HttpClient.instance.dio;
     
@@ -49,7 +49,7 @@ class PlantService {
     }
   }
 
-  /// Create a new plant
+  // Create a new plant
   Future<Plant> createPlant({
     required int speciesId,
     String? nickname,
@@ -80,7 +80,7 @@ class PlantService {
     }
   }
 
-  /// Update an existing plant
+  // Update an existing plant
   Future<Plant> updatePlant({
     required int plantId,
     int? speciesId,
@@ -111,7 +111,7 @@ class PlantService {
     }
   }
 
-  /// Delete a plant
+  // Delete a plant
   Future<void> deletePlant(int plantId) async {
     final dio = HttpClient.instance.dio;
     
