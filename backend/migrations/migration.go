@@ -15,6 +15,6 @@ func GetMigrationsFS(dbType string) (embed.FS, string, error) {
 	default:
 		return embed.FS{}, "", fmt.Errorf("unsupported database type: %s", dbType)
 	}
-	// add case for postgres later
+	// TODO: add case for postgres later
 
 }
