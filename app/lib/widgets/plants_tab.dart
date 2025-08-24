@@ -131,8 +131,8 @@ class _PlantsTabState extends State<PlantsTab> {
                         final plant = plantProvider.plants[index];
                         final displayModel = PlantDisplayModel(
                           plant: plant,
-                          speciesCommonName: 'Unknown Species', // TODO: Fetch species data
-                          location: plant.note, // Using note as location for now
+                          species: null, // TODO: Fetch species data
+                          location: plant.notes, // Using notes as location for now
                         );
                         return _buildPlantCard(context, displayModel);
                       }, childCount: plantProvider.plants.length),
