@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,11 +14,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// stringPtr is a helper function to get a pointer to a string
+func stringPtr(s string) *string {
+	return &s
+}
+
 // fakeDB implements db.Database for testing HandleLogin and HandleSignup.
 type fakeDB struct {
 	GetByEmailFunc  func(ctx context.Context, email string) (*model.User, error)
 	CheckExistsFunc func(ctx context.Context, email string) (bool, error)
-	CreateUserFunc  func(ctx context.Context, email, passHash string) (int64, error)
+	CreateUserFunc  func(ctx context.Context, user *model.User) (int64, error)
 }
 
 func (f *fakeDB) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
@@ -30,8 +34,8 @@ func (f *fakeDB) CheckIfEmailExists(ctx context.Context, email string) (bool, er
 	return f.CheckExistsFunc(ctx, email)
 }
 
-func (f *fakeDB) CreateUser(ctx context.Context, email, passHash string) (int64, error) {
-	return f.CreateUserFunc(ctx, email, passHash)
+func (f *fakeDB) CreateUser(ctx context.Context, user *model.User) (int64, error) {
+	return f.CreateUserFunc(ctx, user)
 }
 
 // Unused methods to satisfy interface:
@@ -44,18 +48,54 @@ func (f *fakeDB) SearchSpecies(ctx context.Context, query string, limit, offset 
 func (f *fakeDB) GetSpeciesByID(ctx context.Context, speciesID int64) (*model.Species, error) {
 	return nil, nil
 }
-func (f *fakeDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (f *fakeDB) GetUserByID(ctx context.Context, userID int64) (*model.User, error) { return nil, nil }
+func (f *fakeDB) CreateLocation(ctx context.Context, location *model.Location) (int64, error) {
+	return 0, nil
+}
+func (f *fakeDB) GetLocationByID(ctx context.Context, userID, locationID int64) (*model.Location, error) {
 	return nil, nil
 }
-func (f *fakeDB) CreatePlant(ctx context.Context, p *model.Plant) (int64, error) { return 0, nil }
-func (f *fakeDB) GetPlantByID(ctx context.Context, userID, plantID int64) (*model.Plant, error) {
+func (f *fakeDB) ListLocations(ctx context.Context, userID int64) ([]*model.Location, error) {
 	return nil, nil
 }
-func (f *fakeDB) ListPlants(ctx context.Context, userID int64, limit, offset int) ([]*model.Plant, error) {
+func (f *fakeDB) UpdateLocation(ctx context.Context, location *model.Location) error { return nil }
+func (f *fakeDB) DeleteLocation(ctx context.Context, userID, locationID int64) error { return nil }
+func (f *fakeDB) CreateUserPlant(ctx context.Context, plant *model.UserPlant) (int64, error) {
+	return 0, nil
+}
+func (f *fakeDB) GetUserPlantByID(ctx context.Context, userID, plantID int64) (*model.UserPlant, error) {
 	return nil, nil
 }
-func (f *fakeDB) UpdatePlant(ctx context.Context, p *model.Plant) error        { return nil }
-func (f *fakeDB) DeletePlant(ctx context.Context, userID, plantID int64) error { return nil }
+func (f *fakeDB) ListUserPlants(ctx context.Context, userID int64, limit, offset int) ([]*model.UserPlant, error) {
+	return nil, nil
+}
+func (f *fakeDB) UpdateUserPlant(ctx context.Context, plant *model.UserPlant) error { return nil }
+func (f *fakeDB) DeleteUserPlant(ctx context.Context, userID, plantID int64) error  { return nil }
+func (f *fakeDB) CreatePlantTask(ctx context.Context, task *model.PlantTask) (int64, error) {
+	return 0, nil
+}
+func (f *fakeDB) GetPlantTaskByID(ctx context.Context, userID, taskID int64) (*model.PlantTask, error) {
+	return nil, nil
+}
+func (f *fakeDB) GetPlantTasksByPlantID(ctx context.Context, userID, plantID int64) ([]*model.PlantTask, error) {
+	return nil, nil
+}
+func (f *fakeDB) UpdatePlantTask(ctx context.Context, task *model.PlantTask) error { return nil }
+func (f *fakeDB) DeletePlantTask(ctx context.Context, userID, taskID int64) error  { return nil }
+func (f *fakeDB) GetOverdueTasks(ctx context.Context, userID int64) ([]*model.PlantTask, error) {
+	return nil, nil
+}
+func (f *fakeDB) CreateCareEvent(ctx context.Context, event *model.CareEvent) (int64, error) {
+	return 0, nil
+}
+func (f *fakeDB) GetCareEventByID(ctx context.Context, userID, eventID int64) (*model.CareEvent, error) {
+	return nil, nil
+}
+func (f *fakeDB) GetCareEventsByPlantID(ctx context.Context, userID, plantID int64, limit, offset int) ([]*model.CareEvent, error) {
+	return nil, nil
+}
+func (f *fakeDB) UpdateCareEvent(ctx context.Context, event *model.CareEvent) error { return nil }
+func (f *fakeDB) DeleteCareEvent(ctx context.Context, userID, eventID int64) error  { return nil }
 
 //-----------------------
 // Tests for HandleLogin
@@ -86,13 +126,13 @@ func TestHandleLogin_DBError(t *testing.T) {
 }
 
 func TestHandleLogin_VerifyPasswordError(t *testing.T) {
-	// Return a user with an invalid PassHash so VerifyPassword fails format check.
+	// Return a user with an invalid PasswordHash so VerifyPassword fails format check.
 	fdb := &fakeDB{
 		GetByEmailFunc: func(ctx context.Context, email string) (*model.User, error) {
 			return &model.User{
-				ID:       1,
-				Email:    email,
-				PassHash: "invalid-format",
+				ID:           1,
+				Email:        email,
+				PasswordHash: stringPtr("invalid-format"),
 			}, nil
 		},
 	}
@@ -107,13 +147,13 @@ func TestHandleLogin_InvalidCredentials(t *testing.T) {
 	validHash, err := HashPassword("correctpass")
 	require.NoError(t, err)
 
-	// Return user with that PassHash
+	// Return user with that PasswordHash
 	fdb := &fakeDB{
 		GetByEmailFunc: func(ctx context.Context, email string) (*model.User, error) {
 			return &model.User{
-				ID:       2,
-				Email:    email,
-				PassHash: validHash,
+				ID:           2,
+				Email:        email,
+				PasswordHash: stringPtr(validHash),
 			}, nil
 		},
 	}
@@ -132,9 +172,9 @@ func TestHandleLogin_Success(t *testing.T) {
 	fdb := &fakeDB{
 		GetByEmailFunc: func(ctx context.Context, email string) (*model.User, error) {
 			return &model.User{
-				ID:       3,
-				Email:    email,
-				PassHash: validHash,
+				ID:           3,
+				Email:        email,
+				PasswordHash: stringPtr(validHash),
 			}, nil
 		},
 	}
@@ -211,7 +251,7 @@ func TestHandleSignup_CreateUserError(t *testing.T) {
 		CheckExistsFunc: func(ctx context.Context, email string) (bool, error) {
 			return false, nil
 		},
-		CreateUserFunc: func(ctx context.Context, email, passHash string) (int64, error) {
+		CreateUserFunc: func(ctx context.Context, user *model.User) (int64, error) {
 			return 0, errors.New("createUser failure")
 		},
 	}
@@ -231,7 +271,7 @@ func TestHandleSignup_Success(t *testing.T) {
 		CheckExistsFunc: func(ctx context.Context, email string) (bool, error) {
 			return false, nil
 		},
-		CreateUserFunc: func(ctx context.Context, email, passHash string) (int64, error) {
+		CreateUserFunc: func(ctx context.Context, user *model.User) (int64, error) {
 			return 42, nil
 		},
 	}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/anish-chanda/ferna/db"
+	"github.com/anish-chanda/ferna/model"
 )
 
 func HandleLogin(db db.Database, user, password string) (ok bool, err error) {
@@ -30,7 +31,10 @@ func HandleLogin(db db.Database, user, password string) (ok bool, err error) {
 	}
 
 	// verify password
-	ok, err = VerifyPassword(password, userRecord.PassHash)
+	if userRecord.PasswordHash == nil {
+		return false, fmt.Errorf("user has no password set")
+	}
+	ok, err = VerifyPassword(password, *userRecord.PasswordHash)
 	if err != nil {
 		fmt.Println("failed to verify password:", err)
 		return false, fmt.Errorf("failed to verify password: %w", err)
@@ -89,7 +93,15 @@ func HandleSignup(db db.Database, w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create user in database
-	userID, err := db.CreateUser(ctx, email, passHash)
+	now := time.Now()
+	user := &model.User{
+		Email:        email,
+		PasswordHash: &passHash,
+		AuthProvider: model.AuthProviderLocal,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	userID, err := db.CreateUser(ctx, user)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("failed to create user: %v", err)

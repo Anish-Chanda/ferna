@@ -7,10 +7,16 @@ import (
 	"time"
 
 	"github.com/anish-chanda/ferna/db"
+	"github.com/anish-chanda/ferna/model"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// stringPtr is a helper function to get a pointer to a string
+func stringPtr(s string) *string {
+	return &s
+}
 
 func setupInMemoryDB(t *testing.T) db.Database {
 	dsn := "file::memory:?mode=memory&cache=shared&_foreign_keys=ON"
@@ -37,7 +43,12 @@ func TestCreateUser_And_CheckIfEmailExists(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	id, err := sq.CreateUser(ctx, "alice@example.com", "dummy-hash")
+	user := &model.User{
+		Email:        "alice@example.com",
+		PasswordHash: stringPtr("dummy-hash"),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	id, err := sq.CreateUser(ctx, user)
 	require.NoError(t, err)
 	assert.True(t, id > 0)
 
@@ -53,7 +64,12 @@ func TestGetUserByEmail_Success(t *testing.T) {
 	defer cancel()
 
 	hash := "s0m3-h4sh"
-	id, err := sq.CreateUser(ctx, "bob@example.com", hash)
+	user := &model.User{
+		Email:        "bob@example.com",
+		PasswordHash: stringPtr(hash),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	id, err := sq.CreateUser(ctx, user)
 	require.NoError(t, err)
 
 	userRec, err := sq.GetUserByEmail(ctx, "bob@example.com")
@@ -62,7 +78,7 @@ func TestGetUserByEmail_Success(t *testing.T) {
 
 	assert.Equal(t, id, userRec.ID)
 	assert.Equal(t, "bob@example.com", userRec.Email)
-	assert.Equal(t, hash, userRec.PassHash)
+	assert.Equal(t, hash, *userRec.PasswordHash)
 	assert.WithinDuration(t, time.Now().UTC(), userRec.CreatedAt.UTC(), time.Minute)
 	assert.WithinDuration(t, time.Now().UTC(), userRec.UpdatedAt.UTC(), time.Minute)
 }
@@ -90,14 +106,24 @@ func TestCreateMultipleUsers(t *testing.T) {
 	// Insert the first user
 	email1 := "user1@example.com"
 	hash1 := "hash1"
-	id1, err := sq.CreateUser(ctx, email1, hash1)
+	user1 := &model.User{
+		Email:        email1,
+		PasswordHash: stringPtr(hash1),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	id1, err := sq.CreateUser(ctx, user1)
 	require.NoError(t, err)
 	assert.True(t, id1 > 0)
 
 	// Insert a second, distinct user
 	email2 := "user2@example.com"
 	hash2 := "hash2"
-	id2, err := sq.CreateUser(ctx, email2, hash2)
+	user2 := &model.User{
+		Email:        email2,
+		PasswordHash: stringPtr(hash2),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	id2, err := sq.CreateUser(ctx, user2)
 	require.NoError(t, err)
 	assert.True(t, id2 > 0)
 	assert.NotEqual(t, id1, id2, "IDs for distinct users should differ")
@@ -124,12 +150,22 @@ func TestCreateDuplicateUser(t *testing.T) {
 	hash := "some-hash"
 
 	// First insertion should succeed
-	id, err := sq.CreateUser(ctx, email, hash)
+	user := &model.User{
+		Email:        email,
+		PasswordHash: stringPtr(hash),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	id, err := sq.CreateUser(ctx, user)
 	require.NoError(t, err)
 	assert.True(t, id > 0)
 
 	// Second insertion with the same email must fail
-	_, err = sq.CreateUser(ctx, email, hash)
+	dupUser := &model.User{
+		Email:        email,
+		PasswordHash: stringPtr(hash),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	_, err = sq.CreateUser(ctx, dupUser)
 	require.Error(t, err, "Inserting a duplicate email should error out")
 
 	// Verify the error mentions "UNIQUE constraint failed" (SQLite)
@@ -154,7 +190,12 @@ func TestContextCancellation(t *testing.T) {
 		"Error should be context.Canceled or DeadlineExceeded")
 
 	// 2) CreateUser with canceled context
-	_, err = sq.CreateUser(ctx, "someone@example.com", "some-hash")
+	user := &model.User{
+		Email:        "someone@example.com",
+		PasswordHash: stringPtr("some-hash"),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	_, err = sq.CreateUser(ctx, user)
 	require.Error(t, err, "CreateUser should error on canceled context")
 	assert.True(t, errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded),
 		"Error should be context.Canceled or DeadlineExceeded")
@@ -180,7 +221,12 @@ func TestCloseThenUse(t *testing.T) {
 	assert.Contains(t, err.Error(), "database is closed", "Error should mention that the DB is closed")
 
 	// Attempt CreateUser
-	_, err = sq.CreateUser(ctx, "postclose@example.com", "hash")
+	user := &model.User{
+		Email:        "postclose@example.com",
+		PasswordHash: stringPtr("hash"),
+		AuthProvider: model.AuthProviderLocal,
+	}
+	_, err = sq.CreateUser(ctx, user)
 	require.Error(t, err, "CreateUser after Close() should error")
 	assert.Contains(t, err.Error(), "database is closed", "Error should mention that the DB is closed")
 
@@ -191,141 +237,3 @@ func TestCloseThenUse(t *testing.T) {
 }
 
 // TestExecContext verifies that ExecContext works correctly for INSERT, UPDATE, DELETE operations
-func TestExecContext_Insert(t *testing.T) {
-	sq := setupInMemoryDB(t)
-	defer sq.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// Test INSERT using ExecContext
-	result, err := sq.ExecContext(ctx,
-		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Test Plant", "Testus plantus", 7)
-	require.NoError(t, err)
-
-	// Check that the insert was successful
-	rowsAffected, err := result.RowsAffected()
-	require.NoError(t, err)
-	assert.Equal(t, int64(1), rowsAffected)
-
-	// Verify the record was inserted by searching for it
-	species, err := sq.SearchSpecies(ctx, "Test Plant", 10, 0)
-	require.NoError(t, err)
-	require.Len(t, species, 1)
-	assert.Equal(t, "Test Plant", species[0].CommonName)
-	assert.Equal(t, "Testus plantus", species[0].ScientificName)
-	assert.Equal(t, 7, species[0].DefaultWateringFrequency)
-}
-
-func TestExecContext_InsertOrIgnore(t *testing.T) {
-	sq := setupInMemoryDB(t)
-	defer sq.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// First insert
-	result1, err := sq.ExecContext(ctx,
-		`INSERT OR IGNORE INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Rose", "Rosa rubiginosa", 3)
-	require.NoError(t, err)
-
-	rowsAffected, err := result1.RowsAffected()
-	require.NoError(t, err)
-	assert.Equal(t, int64(1), rowsAffected)
-
-	// Second insert with same scientific_name should be ignored due to UNIQUE constraint
-	result2, err := sq.ExecContext(ctx,
-		`INSERT OR IGNORE INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Different Rose", "Rosa rubiginosa", 5)
-	require.NoError(t, err)
-
-	rowsAffected, err = result2.RowsAffected()
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), rowsAffected) // Should be 0 because it was ignored
-
-	// Verify only one record exists
-	species, err := sq.SearchSpecies(ctx, "Rosa rubiginosa", 10, 0)
-	require.NoError(t, err)
-	require.Len(t, species, 1)
-	assert.Equal(t, "Rose", species[0].CommonName) // Should still be the original
-}
-
-func TestExecContext_Update(t *testing.T) {
-	sq := setupInMemoryDB(t)
-	defer sq.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// First insert a record
-	_, err := sq.ExecContext(ctx,
-		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Cactus", "Cactaceae genericus", 14)
-	require.NoError(t, err)
-
-	// Update the watering frequency
-	result, err := sq.ExecContext(ctx,
-		`UPDATE species SET default_watering_frequency_days = ? WHERE scientific_name = ?`,
-		21, "Cactaceae genericus")
-	require.NoError(t, err)
-
-	rowsAffected, err := result.RowsAffected()
-	require.NoError(t, err)
-	assert.Equal(t, int64(1), rowsAffected)
-
-	// Verify the update
-	species, err := sq.SearchSpecies(ctx, "Cactus", 10, 0)
-	require.NoError(t, err)
-	require.Len(t, species, 1)
-	assert.Equal(t, 21, species[0].DefaultWateringFrequency)
-}
-
-func TestExecContext_Delete(t *testing.T) {
-	sq := setupInMemoryDB(t)
-	defer sq.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// First insert a record
-	_, err := sq.ExecContext(ctx,
-		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Temporary Plant", "Temporarius plantus", 1)
-	require.NoError(t, err)
-
-	// Verify it exists
-	species, err := sq.SearchSpecies(ctx, "Temporary Plant", 10, 0)
-	require.NoError(t, err)
-	require.Len(t, species, 1)
-
-	// Delete the record
-	result, err := sq.ExecContext(ctx,
-		`DELETE FROM species WHERE scientific_name = ?`,
-		"Temporarius plantus")
-	require.NoError(t, err)
-
-	rowsAffected, err := result.RowsAffected()
-	require.NoError(t, err)
-	assert.Equal(t, int64(1), rowsAffected)
-
-	// Verify it's gone
-	species, err = sq.SearchSpecies(ctx, "Temporary Plant", 10, 0)
-	require.NoError(t, err)
-	assert.Len(t, species, 0)
-}
-
-func TestExecContext_CanceledContext(t *testing.T) {
-	sq := setupInMemoryDB(t)
-	defer sq.Close()
-
-	// Create a context and cancel it immediately
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
-	cancel()
-	time.Sleep(5 * time.Millisecond) // allow cancellation to propagate
-
-	// ExecContext with canceled context should error
-	_, err := sq.ExecContext(ctx,
-		`INSERT INTO species(common_name, scientific_name, default_watering_frequency_days) VALUES (?, ?, ?)`,
-		"Test", "Test", 1)
-	require.Error(t, err, "ExecContext should error on canceled context")
-	assert.True(t, errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded),
-		"Error should be context.Canceled or DeadlineExceeded")
-}
