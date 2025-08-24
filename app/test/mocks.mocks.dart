@@ -59,9 +59,9 @@ class _FakeDio_5 extends _i1.SmartFake implements _i7.Dio {
     : super(parent, parentInvocation);
 }
 
-// A class which mocks [Dio].
-//
-// See the documentation for Mockito's code generation for more information.
+/// A class which mocks [Dio].
+///
+/// See the documentation for Mockito's code generation for more information.
 class MockDio extends _i1.Mock implements _i7.Dio {
   MockDio() {
     _i1.throwOnMissingStub(this);

@@ -1,7 +1,7 @@
 import 'package:ferna/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+// TODO: toggle password visibility for all password fields in signup mode
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 

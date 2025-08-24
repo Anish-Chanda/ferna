@@ -4,9 +4,10 @@ class Plant {
   final int speciesId;
   final String? nickname;
   final String? imageUrl;
-  final int wateringFrequencyDays;
-  final DateTime? lastWateredAt;
-  final String? note;
+  final String? notes;
+  final int? waterIntervalDaysOverride;
+  final int? fertilizerIntervalDaysOverride;
+  final int? locationId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -16,9 +17,10 @@ class Plant {
     required this.speciesId,
     this.nickname,
     this.imageUrl,
-    required this.wateringFrequencyDays,
-    this.lastWateredAt,
-    this.note,
+    this.notes,
+    this.waterIntervalDaysOverride,
+    this.fertilizerIntervalDaysOverride,
+    this.locationId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,11 +32,10 @@ class Plant {
       speciesId: json['species_id'] as int,
       nickname: json['nickname'] as String?,
       imageUrl: json['image_url'] as String?,
-      wateringFrequencyDays: json['watering_frequency_days'] as int,
-      lastWateredAt: json['last_watered_at'] != null
-          ? DateTime.parse(json['last_watered_at'] as String)
-          : null,
-      note: json['note'] as String?,
+      notes: json['notes'] as String?,
+      waterIntervalDaysOverride: json['water_interval_days_override'] as int?,
+      fertilizerIntervalDaysOverride: json['fertilizer_interval_days_override'] as int?,
+      locationId: json['location_id'] as int?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -47,9 +48,10 @@ class Plant {
       'species_id': speciesId,
       'nickname': nickname,
       'image_url': imageUrl,
-      'watering_frequency_days': wateringFrequencyDays,
-      'last_watered_at': lastWateredAt?.toIso8601String(),
-      'note': note,
+      'notes': notes,
+      'water_interval_days_override': waterIntervalDaysOverride,
+      'fertilizer_interval_days_override': fertilizerIntervalDaysOverride,
+      'location_id': locationId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -61,9 +63,10 @@ class Plant {
     int? speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    String? notes,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,9 +76,10 @@ class Plant {
       speciesId: speciesId ?? this.speciesId,
       nickname: nickname ?? this.nickname,
       imageUrl: imageUrl ?? this.imageUrl,
-      wateringFrequencyDays: wateringFrequencyDays ?? this.wateringFrequencyDays,
-      lastWateredAt: lastWateredAt ?? this.lastWateredAt,
-      note: note ?? this.note,
+      notes: notes ?? this.notes,
+      waterIntervalDaysOverride: waterIntervalDaysOverride ?? this.waterIntervalDaysOverride,
+      fertilizerIntervalDaysOverride: fertilizerIntervalDaysOverride ?? this.fertilizerIntervalDaysOverride,
+      locationId: locationId ?? this.locationId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -83,7 +87,7 @@ class Plant {
 
   @override
   String toString() {
-    return 'Plant(id: $id, userId: $userId, speciesId: $speciesId, nickname: $nickname, imageUrl: $imageUrl, wateringFrequencyDays: $wateringFrequencyDays, lastWateredAt: $lastWateredAt, note: $note, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Plant(id: $id, userId: $userId, speciesId: $speciesId, nickname: $nickname, imageUrl: $imageUrl, notes: $notes, waterIntervalDaysOverride: $waterIntervalDaysOverride, fertilizerIntervalDaysOverride: $fertilizerIntervalDaysOverride, locationId: $locationId, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -96,9 +100,10 @@ class Plant {
         other.speciesId == speciesId &&
         other.nickname == nickname &&
         other.imageUrl == imageUrl &&
-        other.wateringFrequencyDays == wateringFrequencyDays &&
-        other.lastWateredAt == lastWateredAt &&
-        other.note == note &&
+        other.notes == notes &&
+        other.waterIntervalDaysOverride == waterIntervalDaysOverride &&
+        other.fertilizerIntervalDaysOverride == fertilizerIntervalDaysOverride &&
+        other.locationId == locationId &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -110,9 +115,10 @@ class Plant {
         speciesId.hashCode ^
         nickname.hashCode ^
         imageUrl.hashCode ^
-        wateringFrequencyDays.hashCode ^
-        lastWateredAt.hashCode ^
-        note.hashCode ^
+        notes.hashCode ^
+        waterIntervalDaysOverride.hashCode ^
+        fertilizerIntervalDaysOverride.hashCode ^
+        locationId.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;
   }

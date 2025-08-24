@@ -19,9 +19,10 @@ void main() {
       speciesId: 456,
       nickname: 'My Plant',
       imageUrl: 'https://example.com/image.jpg',
-      wateringFrequencyDays: 7,
-      lastWateredAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
-      note: 'Living room plant',
+      notes: 'Living room plant',
+      waterIntervalDaysOverride: 7,
+      fertilizerIntervalDaysOverride: null,
+      locationId: 1,
       createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
       updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
     );
@@ -32,9 +33,10 @@ void main() {
       speciesId: 789,
       nickname: 'Second Plant',
       imageUrl: null,
-      wateringFrequencyDays: 10,
-      lastWateredAt: null,
-      note: null,
+      notes: null,
+      waterIntervalDaysOverride: 10,
+      fertilizerIntervalDaysOverride: null,
+      locationId: null,
       createdAt: DateTime.parse('2025-06-02T10:30:00.000Z'),
       updatedAt: DateTime.parse('2025-07-02T10:30:00.000Z'),
     );
@@ -150,9 +152,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenAnswer((_) async => newPlant);
 
         // Act
@@ -179,9 +182,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenThrow(Exception('Creation failed'));
 
         // Act
@@ -207,9 +211,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenAnswer((_) async => updatedPlant);
 
         // Act
@@ -237,9 +242,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenThrow(Exception('Update failed'));
 
         // Act

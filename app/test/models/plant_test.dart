@@ -9,9 +9,10 @@ void main() {
       'species_id': 456,
       'nickname': 'My Plant',
       'image_url': 'https://example.com/image.jpg',
-      'watering_frequency_days': 7,
-      'last_watered_at': '2025-07-01T10:30:00.000Z',
-      'note': 'Living room plant',
+      'notes': 'Living room plant',
+      'water_interval_days_override': 7,
+      'fertilizer_interval_days_override': 30,
+      'location_id': 10,
       'created_at': '2025-06-01T10:30:00.000Z',
       'updated_at': '2025-07-01T10:30:00.000Z',
     };
@@ -20,7 +21,6 @@ void main() {
       'id': 2,
       'user_id': 123,
       'species_id': 456,
-      'watering_frequency_days': 14,
       'created_at': '2025-06-01T10:30:00.000Z',
       'updated_at': '2025-07-01T10:30:00.000Z',
     };
@@ -33,9 +33,10 @@ void main() {
       expect(plant.speciesId, equals(456));
       expect(plant.nickname, equals('My Plant'));
       expect(plant.imageUrl, equals('https://example.com/image.jpg'));
-      expect(plant.wateringFrequencyDays, equals(7));
-      expect(plant.lastWateredAt, equals(DateTime.parse('2025-07-01T10:30:00.000Z')));
-      expect(plant.note, equals('Living room plant'));
+      expect(plant.notes, equals('Living room plant'));
+      expect(plant.waterIntervalDaysOverride, equals(7));
+      expect(plant.fertilizerIntervalDaysOverride, equals(30));
+      expect(plant.locationId, equals(10));
       expect(plant.createdAt, equals(DateTime.parse('2025-06-01T10:30:00.000Z')));
       expect(plant.updatedAt, equals(DateTime.parse('2025-07-01T10:30:00.000Z')));
     });
@@ -48,9 +49,10 @@ void main() {
       expect(plant.speciesId, equals(456));
       expect(plant.nickname, isNull);
       expect(plant.imageUrl, isNull);
-      expect(plant.wateringFrequencyDays, equals(14));
-      expect(plant.lastWateredAt, isNull);
-      expect(plant.note, isNull);
+      expect(plant.notes, isNull);
+      expect(plant.waterIntervalDaysOverride, isNull);
+      expect(plant.fertilizerIntervalDaysOverride, isNull);
+      expect(plant.locationId, isNull);
       expect(plant.createdAt, equals(DateTime.parse('2025-06-01T10:30:00.000Z')));
       expect(plant.updatedAt, equals(DateTime.parse('2025-07-01T10:30:00.000Z')));
     });
@@ -62,9 +64,10 @@ void main() {
         speciesId: 456,
         nickname: 'My Plant',
         imageUrl: 'https://example.com/image.jpg',
-        wateringFrequencyDays: 7,
-        lastWateredAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
-        note: 'Living room plant',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: 7,
+        fertilizerIntervalDaysOverride: 30,
+        locationId: 10,
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -76,9 +79,10 @@ void main() {
       expect(json['species_id'], equals(456));
       expect(json['nickname'], equals('My Plant'));
       expect(json['image_url'], equals('https://example.com/image.jpg'));
-      expect(json['watering_frequency_days'], equals(7));
-      expect(json['last_watered_at'], equals('2025-07-01T10:30:00.000Z'));
-      expect(json['note'], equals('Living room plant'));
+      expect(json['notes'], equals('Living room plant'));
+      expect(json['water_interval_days_override'], equals(7));
+      expect(json['fertilizer_interval_days_override'], equals(30));
+      expect(json['location_id'], equals(10));
       expect(json['created_at'], equals('2025-06-01T10:30:00.000Z'));
       expect(json['updated_at'], equals('2025-07-01T10:30:00.000Z'));
     });
@@ -90,9 +94,10 @@ void main() {
         speciesId: 456,
         nickname: 'Original Name',
         imageUrl: null,
-        wateringFrequencyDays: 7,
-        lastWateredAt: null,
-        note: null,
+        notes: null,
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: null,
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -100,7 +105,7 @@ void main() {
       final updatedPlant = originalPlant.copyWith(
         nickname: 'Updated Name',
         imageUrl: 'https://example.com/new-image.jpg',
-        note: 'New note',
+        notes: 'New notes',
       );
 
       expect(updatedPlant.id, equals(originalPlant.id));
@@ -108,9 +113,10 @@ void main() {
       expect(updatedPlant.speciesId, equals(originalPlant.speciesId));
       expect(updatedPlant.nickname, equals('Updated Name'));
       expect(updatedPlant.imageUrl, equals('https://example.com/new-image.jpg'));
-      expect(updatedPlant.wateringFrequencyDays, equals(originalPlant.wateringFrequencyDays));
-      expect(updatedPlant.lastWateredAt, equals(originalPlant.lastWateredAt));
-      expect(updatedPlant.note, equals('New note'));
+      expect(updatedPlant.notes, equals('New notes'));
+      expect(updatedPlant.waterIntervalDaysOverride, equals(originalPlant.waterIntervalDaysOverride));
+      expect(updatedPlant.fertilizerIntervalDaysOverride, equals(originalPlant.fertilizerIntervalDaysOverride));
+      expect(updatedPlant.locationId, equals(originalPlant.locationId));
       expect(updatedPlant.createdAt, equals(originalPlant.createdAt));
       expect(updatedPlant.updatedAt, equals(originalPlant.updatedAt));
     });
@@ -122,9 +128,10 @@ void main() {
         speciesId: 456,
         nickname: 'My Plant',
         imageUrl: 'https://example.com/image.jpg',
-        wateringFrequencyDays: 7,
-        lastWateredAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
-        note: 'Living room plant',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: 7,
+        fertilizerIntervalDaysOverride: 30,
+        locationId: 10,
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -135,9 +142,10 @@ void main() {
         speciesId: 456,
         nickname: 'My Plant',
         imageUrl: 'https://example.com/image.jpg',
-        wateringFrequencyDays: 7,
-        lastWateredAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
-        note: 'Living room plant',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: 7,
+        fertilizerIntervalDaysOverride: 30,
+        locationId: 10,
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -157,9 +165,10 @@ void main() {
         speciesId: 456,
         nickname: 'My Plant',
         imageUrl: null,
-        wateringFrequencyDays: 7,
-        lastWateredAt: null,
-        note: null,
+        notes: null,
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: null,
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );

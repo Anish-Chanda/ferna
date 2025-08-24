@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/anish-chanda/ferna/db"
 	"github.com/anish-chanda/ferna/model"
 	"github.com/gorilla/mux"
 )
 
-// Creates a plant for the user. Requires userID from JWT token in request context
-func CreatePlant(database db.Database) http.HandlerFunc {
+// Creates a user plant for the user. Requires userID from JWT token in request context
+func CreateUserPlant(database db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var p model.Plant
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		var plant model.UserPlant
+		if err := json.NewDecoder(r.Body).Decode(&plant); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
@@ -25,16 +26,16 @@ func CreatePlant(database db.Database) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		p.UserID = userID
+		plant.UserID = userID
 
-		// validate required fielda
-		if p.SpeciesID == 0 {
+		// Validate required fields
+		if plant.SpeciesID == 0 {
 			http.Error(w, "species_id is required", http.StatusBadRequest)
 			return
 		}
 
-		// get species
-		species, err := database.GetSpeciesByID(r.Context(), p.SpeciesID)
+		// Get species to validate it exists
+		species, err := database.GetSpeciesByID(r.Context(), plant.SpeciesID)
 		if err != nil {
 			http.Error(w, "Failed to get species: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -44,30 +45,33 @@ func CreatePlant(database db.Database) http.HandlerFunc {
 			return
 		}
 
-		// set nickname and wattering frequency if not provided
-		if p.Nickname == nil || *p.Nickname == "" {
-			p.Nickname = &species.CommonName
-		}
-		if p.WateringFrequencyDays <= 0 {
-			p.WateringFrequencyDays = species.DefaultWateringFrequency
+		// Set timestamps
+		now := time.Now()
+		plant.CreatedAt = now
+		plant.UpdatedAt = now
+
+		// Set default nickname if not provided
+		if plant.Nickname == nil || *plant.Nickname == "" {
+			plant.Nickname = &species.CommonName
 		}
 
-		id, err := database.CreatePlant(r.Context(), &p)
+		id, err := database.CreateUserPlant(r.Context(), &plant)
 		if err != nil {
 			http.Error(w, "Failed to create plant", http.StatusInternalServerError)
 			return
 		}
 
-		p.ID = id
+		plant.ID = id
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(p)
+		json.NewEncoder(w).Encode(plant)
 	}
 }
 
-func GetPlant(database db.Database) http.HandlerFunc {
+func GetUserPlant(database db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		plantID, err := strconv.ParseInt(mux.Vars(r)["plantID"], 10, 64)
+		vars := mux.Vars(r)
+		plantID, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			http.Error(w, "Invalid plant ID", http.StatusBadRequest)
 			return
@@ -79,7 +83,7 @@ func GetPlant(database db.Database) http.HandlerFunc {
 			return
 		}
 
-		plant, err := database.GetPlantByID(r.Context(), userID, plantID)
+		plant, err := database.GetUserPlantByID(r.Context(), userID, plantID)
 		if err != nil {
 			http.Error(w, "Failed to get plant: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -94,18 +98,12 @@ func GetPlant(database db.Database) http.HandlerFunc {
 	}
 }
 
-func UpdatePlant(database db.Database) http.HandlerFunc {
+func UpdateUserPlant(database db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		plantID, err := strconv.ParseInt(mux.Vars(r)["plantID"], 10, 64)
+		vars := mux.Vars(r)
+		plantID, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			http.Error(w, "Invalid plant ID", http.StatusBadRequest)
-			return
-		}
-
-		// Parse the partial update request first
-		var updateData model.Plant
-		if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
@@ -115,8 +113,14 @@ func UpdatePlant(database db.Database) http.HandlerFunc {
 			return
 		}
 
-		// First, fetch the existing plant
-		existingPlant, err := database.GetPlantByID(r.Context(), userID, plantID)
+		var plant model.UserPlant
+		if err := json.NewDecoder(r.Body).Decode(&plant); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Get existing plant to verify ownership and get current values
+		existingPlant, err := database.GetUserPlantByID(r.Context(), userID, plantID)
 		if err != nil {
 			http.Error(w, "Failed to get plant: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -126,41 +130,32 @@ func UpdatePlant(database db.Database) http.HandlerFunc {
 			return
 		}
 
-		// Merge changes into existing plant (only update non-zero fields)
-		if updateData.SpeciesID != 0 {
-			existingPlant.SpeciesID = updateData.SpeciesID
-		}
-		if updateData.Nickname != nil {
-			existingPlant.Nickname = updateData.Nickname
-		}
-		if updateData.ImageURL != nil {
-			existingPlant.ImageURL = updateData.ImageURL
-		}
-		if updateData.WateringFrequencyDays != 0 {
-			existingPlant.WateringFrequencyDays = updateData.WateringFrequencyDays
-		}
-		if updateData.LastWateredAt != nil {
-			existingPlant.LastWateredAt = updateData.LastWateredAt
-		}
-		if updateData.Note != nil {
-			existingPlant.Note = updateData.Note
+		// Set immutable fields
+		plant.ID = plantID
+		plant.UserID = userID
+		plant.CreatedAt = existingPlant.CreatedAt
+		plant.UpdatedAt = time.Now()
+
+		// Keep existing values for fields not provided
+		if plant.SpeciesID == 0 {
+			plant.SpeciesID = existingPlant.SpeciesID
 		}
 
-		// Update the plant
-		if err := database.UpdatePlant(r.Context(), existingPlant); err != nil {
+		err = database.UpdateUserPlant(r.Context(), &plant)
+		if err != nil {
 			http.Error(w, "Failed to update plant: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Return the updated plant
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(existingPlant)
+		json.NewEncoder(w).Encode(plant)
 	}
 }
 
-func DeletePlant(database db.Database) http.HandlerFunc {
+func DeleteUserPlant(database db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		plantID, err := strconv.ParseInt(mux.Vars(r)["plantID"], 10, 64)
+		vars := mux.Vars(r)
+		plantID, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			http.Error(w, "Invalid plant ID", http.StatusBadRequest)
 			return
@@ -172,7 +167,8 @@ func DeletePlant(database db.Database) http.HandlerFunc {
 			return
 		}
 
-		if err := database.DeletePlant(r.Context(), userID, plantID); err != nil {
+		err = database.DeleteUserPlant(r.Context(), userID, plantID)
+		if err != nil {
 			http.Error(w, "Failed to delete plant: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -181,7 +177,7 @@ func DeletePlant(database db.Database) http.HandlerFunc {
 	}
 }
 
-func ListPlants(database db.Database) http.HandlerFunc {
+func ListUserPlants(database db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := GetUserIDFromRequest(r)
 		if err != nil {
@@ -203,15 +199,15 @@ func ListPlants(database db.Database) http.HandlerFunc {
 			}
 		}
 
-		plants, err := database.ListPlants(r.Context(), userID, limit, offset)
+		plants, err := database.ListUserPlants(r.Context(), userID, limit, offset)
 		if err != nil {
 			http.Error(w, "Failed to list plants: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// return empty array if user doesnt have any plants
+		// Return empty array if user doesn't have any plants
 		if plants == nil {
-			plants = []*model.Plant{}
+			plants = []*model.UserPlant{}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

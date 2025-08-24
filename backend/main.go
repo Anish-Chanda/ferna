@@ -13,7 +13,6 @@ import (
 	"github.com/anish-chanda/ferna/db"
 	"github.com/anish-chanda/ferna/db/sqlite3"
 	"github.com/anish-chanda/ferna/handlers"
-	"github.com/anish-chanda/ferna/seed"
 	"github.com/go-pkgz/auth/v2"
 	"github.com/go-pkgz/auth/v2/avatar"
 	"github.com/go-pkgz/auth/v2/provider"
@@ -55,12 +54,6 @@ func main() {
 
 	if err := database.Migrate(); err != nil {
 		log.Fatalf("run migrations: %v", err)
-	}
-
-	// Seed the species table
-	fmt.Println("Seeding species data...")
-	if err := seed.SeedSpecies(context.Background(), database); err != nil {
-		log.Fatalf("seed species: %v", err)
 	}
 
 	fmt.Println("Database connected and migrated successfully!")
@@ -111,14 +104,38 @@ func main() {
 	authMiddleware := authService.Middleware()
 	apiRouter := r.PathPrefix("/api").Subrouter()
 	apiRouter.Use(authMiddleware.Auth)
-	apiRouter.HandleFunc("/plants/species", handlers.SearchSpecies(database)).Methods("GET")
 
-	// plant routes
-	apiRouter.HandleFunc("/plants", handlers.CreatePlant(database)).Methods("POST")
-	apiRouter.HandleFunc("/plants", handlers.ListPlants(database)).Methods("GET")
-	apiRouter.HandleFunc("/plants/{plantID}", handlers.GetPlant(database)).Methods("GET")
-	apiRouter.HandleFunc("/plants/{plantID}", handlers.UpdatePlant(database)).Methods("PATCH")
-	apiRouter.HandleFunc("/plants/{plantID}", handlers.DeletePlant(database)).Methods("DELETE")
+	// species routes
+	apiRouter.HandleFunc("/species", handlers.SearchSpecies(database)).Methods("GET")
+
+	// location routes
+	apiRouter.HandleFunc("/locations", handlers.CreateLocation(database)).Methods("POST")
+	apiRouter.HandleFunc("/locations", handlers.ListLocations(database)).Methods("GET")
+	apiRouter.HandleFunc("/locations/{id}", handlers.GetLocation(database)).Methods("GET")
+	apiRouter.HandleFunc("/locations/{id}", handlers.UpdateLocation(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/locations/{id}", handlers.DeleteLocation(database)).Methods("DELETE")
+
+	// user plant routes
+	apiRouter.HandleFunc("/plants", handlers.CreateUserPlant(database)).Methods("POST")
+	apiRouter.HandleFunc("/plants", handlers.ListUserPlants(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{id}", handlers.GetUserPlant(database)).Methods("GET")
+	apiRouter.HandleFunc("/plants/{id}", handlers.UpdateUserPlant(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/plants/{id}", handlers.DeleteUserPlant(database)).Methods("DELETE")
+
+	// plant task routes
+	apiRouter.HandleFunc("/plants/{plantId}/tasks", handlers.CreatePlantTask(database)).Methods("POST")
+	apiRouter.HandleFunc("/plants/{plantId}/tasks", handlers.GetPlantTasksByPlantID(database)).Methods("GET")
+	apiRouter.HandleFunc("/tasks/{id}", handlers.GetPlantTask(database)).Methods("GET")
+	apiRouter.HandleFunc("/tasks/{id}", handlers.UpdatePlantTask(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/tasks/{id}", handlers.DeletePlantTask(database)).Methods("DELETE")
+	apiRouter.HandleFunc("/tasks/overdue", handlers.GetOverdueTasks(database)).Methods("GET")
+
+	// care event routes
+	apiRouter.HandleFunc("/plants/{plantId}/events", handlers.CreateCareEvent(database)).Methods("POST")
+	apiRouter.HandleFunc("/plants/{plantId}/events", handlers.GetCareEventsByPlantID(database)).Methods("GET")
+	apiRouter.HandleFunc("/events/{id}", handlers.GetCareEvent(database)).Methods("GET")
+	apiRouter.HandleFunc("/events/{id}", handlers.UpdateCareEvent(database)).Methods("PATCH")
+	apiRouter.HandleFunc("/events/{id}", handlers.DeleteCareEvent(database)).Methods("DELETE")
 
 	fmt.Println("Server is running on port 8080...")
 	http.ListenAndServe(":8080", r)

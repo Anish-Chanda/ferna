@@ -7,7 +7,12 @@ void main() {
       'id': 1,
       'common_name': 'Monstera Deliciosa',
       'scientific_name': 'Monstera deliciosa',
-      'default_watering_frequency_days': 7,
+      'light_pref': 'bright_indirect',
+      'default_water_interval_days': 7,
+      'default_fertilizer_interval_days': 30,
+      'toxicity': 'non_toxic',
+      'care_notes': 'Keep soil moist but not soggy',
+      'care_notes_source': 'Horticulture guide',
       'created_at': '2025-06-01T10:30:00.000Z',
       'updated_at': '2025-07-01T10:30:00.000Z',
     };
@@ -15,7 +20,10 @@ void main() {
     const testSpeciesJsonMinimal = {
       'id': 2,
       'common_name': 'Snake Plant',
-      'default_watering_frequency_days': 14,
+      'light_pref': 'low',
+      'default_water_interval_days': 14,
+      'default_fertilizer_interval_days': 60,
+      'toxicity': 'toxic_to_pets',
       'created_at': '2025-06-01T10:30:00.000Z',
       'updated_at': '2025-07-01T10:30:00.000Z',
     };
@@ -26,7 +34,12 @@ void main() {
       expect(species.id, equals(1));
       expect(species.commonName, equals('Monstera Deliciosa'));
       expect(species.scientificName, equals('Monstera deliciosa'));
-      expect(species.defaultWateringFrequency, equals(7));
+      expect(species.lightPreference, equals('bright_indirect'));
+      expect(species.defaultWaterIntervalDays, equals(7));
+      expect(species.defaultFertilizerIntervalDays, equals(30));
+      expect(species.toxicity, equals('non_toxic'));
+      expect(species.careNotes, equals('Keep soil moist but not soggy'));
+      expect(species.careNotesSource, equals('Horticulture guide'));
       expect(species.createdAt, equals(DateTime.parse('2025-06-01T10:30:00.000Z')));
       expect(species.updatedAt, equals(DateTime.parse('2025-07-01T10:30:00.000Z')));
     });
@@ -37,7 +50,12 @@ void main() {
       expect(species.id, equals(2));
       expect(species.commonName, equals('Snake Plant'));
       expect(species.scientificName, isNull);
-      expect(species.defaultWateringFrequency, equals(14));
+      expect(species.lightPreference, equals('low'));
+      expect(species.defaultWaterIntervalDays, equals(14));
+      expect(species.defaultFertilizerIntervalDays, equals(60));
+      expect(species.toxicity, equals('toxic_to_pets'));
+      expect(species.careNotes, isNull);
+      expect(species.careNotesSource, isNull);
       expect(species.createdAt, equals(DateTime.parse('2025-06-01T10:30:00.000Z')));
       expect(species.updatedAt, equals(DateTime.parse('2025-07-01T10:30:00.000Z')));
     });
@@ -47,7 +65,12 @@ void main() {
         id: 1,
         commonName: 'Monstera Deliciosa',
         scientificName: 'Monstera deliciosa',
-        defaultWateringFrequency: 7,
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
+        careNotes: 'Keep soil moist but not soggy',
+        careNotesSource: 'Horticulture guide',
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -57,7 +80,12 @@ void main() {
       expect(json['id'], equals(1));
       expect(json['common_name'], equals('Monstera Deliciosa'));
       expect(json['scientific_name'], equals('Monstera deliciosa'));
-      expect(json['default_watering_frequency_days'], equals(7));
+      expect(json['light_pref'], equals('bright_indirect'));
+      expect(json['default_water_interval_days'], equals(7));
+      expect(json['default_fertilizer_interval_days'], equals(30));
+      expect(json['toxicity'], equals('non_toxic'));
+      expect(json['care_notes'], equals('Keep soil moist but not soggy'));
+      expect(json['care_notes_source'], equals('Horticulture guide'));
       expect(json['created_at'], equals('2025-06-01T10:30:00.000Z'));
       expect(json['updated_at'], equals('2025-07-01T10:30:00.000Z'));
     });
@@ -67,7 +95,10 @@ void main() {
         id: 1,
         commonName: 'Original Name',
         scientificName: null,
-        defaultWateringFrequency: 7,
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -75,13 +106,14 @@ void main() {
       final updatedSpecies = originalSpecies.copyWith(
         commonName: 'Updated Name',
         scientificName: 'Updated scientificus',
-        defaultWateringFrequency: 10,
+        defaultWaterIntervalDays: 10,
       );
 
       expect(updatedSpecies.id, equals(originalSpecies.id));
       expect(updatedSpecies.commonName, equals('Updated Name'));
       expect(updatedSpecies.scientificName, equals('Updated scientificus'));
-      expect(updatedSpecies.defaultWateringFrequency, equals(10));
+      expect(updatedSpecies.defaultWaterIntervalDays, equals(10));
+      expect(updatedSpecies.lightPreference, equals(originalSpecies.lightPreference));
       expect(updatedSpecies.createdAt, equals(originalSpecies.createdAt));
       expect(updatedSpecies.updatedAt, equals(originalSpecies.updatedAt));
     });
@@ -91,7 +123,10 @@ void main() {
         id: 1,
         commonName: 'Monstera Deliciosa',
         scientificName: 'Monstera deliciosa',
-        defaultWateringFrequency: 7,
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -100,7 +135,10 @@ void main() {
         id: 1,
         commonName: 'Monstera Deliciosa',
         scientificName: 'Monstera deliciosa',
-        defaultWateringFrequency: 7,
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );
@@ -118,7 +156,10 @@ void main() {
         id: 1,
         commonName: 'Monstera Deliciosa',
         scientificName: 'Monstera deliciosa',
-        defaultWateringFrequency: 7,
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
         createdAt: DateTime.parse('2025-06-01T10:30:00.000Z'),
         updatedAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
       );

@@ -54,9 +54,10 @@ class PlantService {
     required int speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) async {
     final dio = HttpClient.instance.dio;
     
@@ -64,9 +65,10 @@ class PlantService {
       'species_id': speciesId,
       if (nickname != null) 'nickname': nickname,
       if (imageUrl != null) 'image_url': imageUrl,
-      if (wateringFrequencyDays != null) 'watering_frequency_days': wateringFrequencyDays,
-      if (lastWateredAt != null) 'last_watered_at': lastWateredAt.toIso8601String(),
-      if (note != null) 'note': note,
+      if (waterIntervalDaysOverride != null) 'water_interval_days_override': waterIntervalDaysOverride,
+      if (fertilizerIntervalDaysOverride != null) 'fertilizer_interval_days_override': fertilizerIntervalDaysOverride,
+      if (locationId != null) 'location_id': locationId,
+      if (notes != null) 'notes': notes,
     };
 
     final response = await dio.post('/api/plants', data: plantData);
@@ -86,9 +88,10 @@ class PlantService {
     int? speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) async {
     final dio = HttpClient.instance.dio;
     
@@ -96,9 +99,10 @@ class PlantService {
     if (speciesId != null) updateData['species_id'] = speciesId;
     if (nickname != null) updateData['nickname'] = nickname;
     if (imageUrl != null) updateData['image_url'] = imageUrl;
-    if (wateringFrequencyDays != null) updateData['watering_frequency_days'] = wateringFrequencyDays;
-    if (lastWateredAt != null) updateData['last_watered_at'] = lastWateredAt.toIso8601String();
-    if (note != null) updateData['note'] = note;
+    if (waterIntervalDaysOverride != null) updateData['water_interval_days_override'] = waterIntervalDaysOverride;
+    if (fertilizerIntervalDaysOverride != null) updateData['fertilizer_interval_days_override'] = fertilizerIntervalDaysOverride;
+    if (locationId != null) updateData['location_id'] = locationId;
+    if (notes != null) updateData['notes'] = notes;
 
     final response = await dio.patch('/api/plants/$plantId', data: updateData);
 

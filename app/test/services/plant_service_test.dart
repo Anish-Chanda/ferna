@@ -216,9 +216,9 @@ void main() {
           speciesId: 456,
           nickname: 'My Plant',
           imageUrl: 'https://example.com/image.jpg',
-          wateringFrequencyDays: 7,
-          lastWateredAt: DateTime.parse('2025-07-01T10:30:00.000Z'),
-          note: 'Living room plant',
+          waterIntervalDaysOverride: 7,
+          locationId: 1,
+          notes: 'Living room plant',
         );
 
         // Assert
@@ -232,9 +232,9 @@ void main() {
               'species_id': 456,
               'nickname': 'My Plant',
               'image_url': 'https://example.com/image.jpg',
-              'watering_frequency_days': 7,
-              'last_watered_at': '2025-07-01T10:30:00.000Z',
-              'note': 'Living room plant',
+              'water_interval_days_override': 7,
+              'location_id': 1,
+              'notes': 'Living room plant',
             },
           ),
         ).called(1);

@@ -50,18 +50,20 @@ class PlantProvider with ChangeNotifier {
     required int speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) async {
     try {
       final newPlant = await _plantService.createPlant(
         speciesId: speciesId,
         nickname: nickname,
         imageUrl: imageUrl,
-        wateringFrequencyDays: wateringFrequencyDays,
-        lastWateredAt: lastWateredAt,
-        note: note,
+        waterIntervalDaysOverride: waterIntervalDaysOverride,
+        fertilizerIntervalDaysOverride: fertilizerIntervalDaysOverride,
+        locationId: locationId,
+        notes: notes,
       );
       
       _plants.add(newPlant);
@@ -80,9 +82,10 @@ class PlantProvider with ChangeNotifier {
     int? speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) async {
     try {
       final updatedPlant = await _plantService.updatePlant(
@@ -90,9 +93,10 @@ class PlantProvider with ChangeNotifier {
         speciesId: speciesId,
         nickname: nickname,
         imageUrl: imageUrl,
-        wateringFrequencyDays: wateringFrequencyDays,
-        lastWateredAt: lastWateredAt,
-        note: note,
+        waterIntervalDaysOverride: waterIntervalDaysOverride,
+        fertilizerIntervalDaysOverride: fertilizerIntervalDaysOverride,
+        locationId: locationId,
+        notes: notes,
       );
       
       final index = _plants.indexWhere((plant) => plant.id == plantId);

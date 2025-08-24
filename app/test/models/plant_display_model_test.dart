@@ -1,18 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ferna/models/plant.dart';
+import 'package:ferna/models/species.dart';
 import 'package:ferna/models/plant_display_model.dart';
 
 void main() {
   group('PlantDisplayModel', () {
     late Plant testPlant;
+    late Species testSpecies;
     late DateTime testCreatedAt;
     late DateTime testUpdatedAt;
-    late DateTime testLastWateredAt;
 
     setUp(() {
       testCreatedAt = DateTime.parse('2025-06-01T10:30:00.000Z');
       testUpdatedAt = DateTime.parse('2025-07-01T10:30:00.000Z');
-      testLastWateredAt = DateTime.now().subtract(const Duration(days: 3));
+      
+      testSpecies = Species(
+        id: 456,
+        commonName: 'Monstera Deliciosa',
+        scientificName: 'Monstera deliciosa',
+        lightPreference: 'bright_indirect',
+        defaultWaterIntervalDays: 7,
+        defaultFertilizerIntervalDays: 30,
+        toxicity: 'non_toxic',
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
+      );
       
       testPlant = Plant(
         id: 1,
@@ -20,9 +32,10 @@ void main() {
         speciesId: 456,
         nickname: 'My Monstera',
         imageUrl: 'https://example.com/image.jpg',
-        wateringFrequencyDays: 7,
-        lastWateredAt: testLastWateredAt,
-        note: 'Living room',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -31,7 +44,7 @@ void main() {
     test('displayName returns nickname when available', () {
       final displayModel = PlantDisplayModel(
         plant: testPlant,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Living room',
       );
 
@@ -39,21 +52,45 @@ void main() {
     });
 
     test('displayName returns species common name when nickname is null', () {
-      final plantWithoutNickname = testPlant.copyWith(nickname: null);
+      final plantWithoutNickname = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: null, // Explicitly null
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
+      );
       final displayModel = PlantDisplayModel(
         plant: plantWithoutNickname,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Living room',
       );
 
       expect(displayModel.displayName, equals('Monstera Deliciosa'));
     });
 
-    test('displayName returns Unknown Plant when both nickname and species name are null', () {
-      final plantWithoutNickname = testPlant.copyWith(nickname: null);
+    test('displayName returns Unknown Plant when both nickname and species are null', () {
+      final plantWithoutNickname = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: null, // Explicitly null
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
+      );
       final displayModel = PlantDisplayModel(
         plant: plantWithoutNickname,
-        speciesCommonName: null,
+        species: null,
         location: 'Living room',
       );
 
@@ -63,7 +100,7 @@ void main() {
     test('locationText returns provided location', () {
       final displayModel = PlantDisplayModel(
         plant: testPlant,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Bedroom',
       );
 
@@ -73,7 +110,7 @@ void main() {
     test('locationText returns No location when location is null', () {
       final displayModel = PlantDisplayModel(
         plant: testPlant,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: null,
       );
 
@@ -83,7 +120,7 @@ void main() {
     test('hasCustomNickname returns true when nickname exists', () {
       final displayModel = PlantDisplayModel(
         plant: testPlant,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Living room',
       );
 
@@ -91,10 +128,22 @@ void main() {
     });
 
     test('hasCustomNickname returns false when nickname is null', () {
-      final plantWithoutNickname = testPlant.copyWith(nickname: null);
+      final plantWithoutNickname = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: null, // Explicitly null
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
+      );
       final displayModel = PlantDisplayModel(
         plant: plantWithoutNickname,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Living room',
       );
 
@@ -102,134 +151,125 @@ void main() {
     });
 
     test('hasCustomNickname returns false when nickname is empty', () {
-      final plantWithEmptyNickname = testPlant.copyWith(nickname: '');
+      final plantWithEmptyNickname = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: '', // Explicitly empty
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: null,
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
+      );
       final displayModel = PlantDisplayModel(
         plant: plantWithEmptyNickname,
-        speciesCommonName: 'Monstera Deliciosa',
+        species: testSpecies,
         location: 'Living room',
       );
 
       expect(displayModel.hasCustomNickname, isFalse);
     });
 
-    test('daysSinceWatered calculates correctly', () {
-      final now = DateTime.now();
-      final fiveDaysAgo = now.subtract(const Duration(days: 5));
-      final plantWateredFiveDaysAgo = testPlant.copyWith(lastWateredAt: fiveDaysAgo);
-      
+    test('daysSinceWatered returns 0 (placeholder implementation)', () {
       final displayModel = PlantDisplayModel(
-        plant: plantWateredFiveDaysAgo,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: testPlant,
+        species: testSpecies,
         location: 'Living room',
       );
 
-      expect(displayModel.daysSinceWatered, equals(5));
-    });
-
-    test('daysSinceWatered returns 0 when lastWateredAt is null', () {
-      final plantNeverWatered = testPlant.copyWith(lastWateredAt: null);
-      final displayModel = PlantDisplayModel(
-        plant: plantNeverWatered,
-        speciesCommonName: 'Monstera Deliciosa',
-        location: 'Living room',
-      );
-
+      // This is a placeholder until care event tracking is implemented
       expect(displayModel.daysSinceWatered, equals(0));
     });
 
-    test('daysOverdue calculates correctly when overdue', () {
-      final now = DateTime.now();
-      final tenDaysAgo = now.subtract(const Duration(days: 10));
-      final plantWateredTenDaysAgo = testPlant.copyWith(
-        lastWateredAt: tenDaysAgo,
-        wateringFrequencyDays: 7,
+    test('wateringFrequencyDays returns plant override when available', () {
+      final plantWithOverride = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: 'My Monstera',
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: 10, // Override value
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
       );
-      
       final displayModel = PlantDisplayModel(
-        plant: plantWateredTenDaysAgo,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: plantWithOverride,
+        species: testSpecies,
         location: 'Living room',
       );
 
-      expect(displayModel.daysOverdue, equals(3)); // 10 - 7 = 3 days overdue
+      expect(displayModel.wateringFrequencyDays, equals(10));
     });
 
-    test('daysOverdue is negative when not overdue', () {
-      final now = DateTime.now();
-      final threeDaysAgo = now.subtract(const Duration(days: 3));
-      final plantWateredThreeDaysAgo = testPlant.copyWith(
-        lastWateredAt: threeDaysAgo,
-        wateringFrequencyDays: 7,
-      );
-      
+    test('wateringFrequencyDays returns species default when no plant override', () {
       final displayModel = PlantDisplayModel(
-        plant: plantWateredThreeDaysAgo,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: testPlant,
+        species: testSpecies,
         location: 'Living room',
       );
 
-      expect(displayModel.daysOverdue, equals(-4)); // 3 - 7 = -4 days (not overdue)
+      expect(displayModel.wateringFrequencyDays, equals(7));
     });
 
-    test('needsWatering returns true when overdue', () {
-      final now = DateTime.now();
-      final tenDaysAgo = now.subtract(const Duration(days: 10));
-      final plantWateredTenDaysAgo = testPlant.copyWith(
-        lastWateredAt: tenDaysAgo,
-        wateringFrequencyDays: 7,
-      );
-      
+    test('wateringFrequencyDays returns default 7 when no species or override', () {
       final displayModel = PlantDisplayModel(
-        plant: plantWateredTenDaysAgo,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: testPlant,
+        species: null,
         location: 'Living room',
       );
 
-      expect(displayModel.needsWatering, isTrue);
+      expect(displayModel.wateringFrequencyDays, equals(7));
     });
 
-    test('needsWatering returns false when not overdue', () {
-      final now = DateTime.now();
-      final threeDaysAgo = now.subtract(const Duration(days: 3));
-      final plantWateredThreeDaysAgo = testPlant.copyWith(
-        lastWateredAt: threeDaysAgo,
-        wateringFrequencyDays: 7,
+    test('daysOverdue calculates based on frequency and days since watered', () {
+      final plantWithOverride = Plant(
+        id: 1,
+        userId: 123,
+        speciesId: 456,
+        nickname: 'My Monstera',
+        imageUrl: 'https://example.com/image.jpg',
+        notes: 'Living room plant',
+        waterIntervalDaysOverride: 7, // Override value
+        fertilizerIntervalDaysOverride: null,
+        locationId: 1,
+        createdAt: testCreatedAt,
+        updatedAt: testUpdatedAt,
       );
-      
       final displayModel = PlantDisplayModel(
-        plant: plantWateredThreeDaysAgo,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: plantWithOverride,
+        species: testSpecies,
         location: 'Living room',
       );
 
+      // Since daysSinceWatered is 0 and wateringFrequencyDays is 7
+      expect(displayModel.daysOverdue, equals(-7)); // 0 - 7 = -7 (not overdue)
+    });
+
+    test('needsWatering returns false with current placeholder implementation', () {
+      final displayModel = PlantDisplayModel(
+        plant: testPlant,
+        species: testSpecies,
+        location: 'Living room',
+      );
+
+      // Since daysSinceWatered is always 0, needsWatering will be false
       expect(displayModel.needsWatering, isFalse);
     });
 
-    test('nextWateringDate calculates correctly', () {
-      final lastWatered = DateTime(2025, 7, 1, 10, 30);
-      final plantWithKnownWateringDate = testPlant.copyWith(
-        lastWateredAt: lastWatered,
-        wateringFrequencyDays: 7,
-      );
-      
+    test('nextWateringDate returns null (placeholder implementation)', () {
       final displayModel = PlantDisplayModel(
-        plant: plantWithKnownWateringDate,
-        speciesCommonName: 'Monstera Deliciosa',
+        plant: testPlant,
+        species: testSpecies,
         location: 'Living room',
       );
 
-      final expectedNextWatering = DateTime(2025, 7, 8, 10, 30);
-      expect(displayModel.nextWateringDate, equals(expectedNextWatering));
-    });
-
-    test('nextWateringDate returns null when lastWateredAt is null', () {
-      final plantNeverWatered = testPlant.copyWith(lastWateredAt: null);
-      final displayModel = PlantDisplayModel(
-        plant: plantNeverWatered,
-        speciesCommonName: 'Monstera Deliciosa',
-        location: 'Living room',
-      );
-
+      // This is a placeholder until care event tracking is implemented
       expect(displayModel.nextWateringDate, isNull);
     });
   });
