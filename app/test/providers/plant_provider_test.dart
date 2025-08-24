@@ -152,9 +152,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenAnswer((_) async => newPlant);
 
         // Act
@@ -181,9 +182,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenThrow(Exception('Creation failed'));
 
         // Act
@@ -209,9 +211,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenAnswer((_) async => updatedPlant);
 
         // Act
@@ -239,9 +242,10 @@ void main() {
           speciesId: anyNamed('speciesId'),
           nickname: anyNamed('nickname'),
           imageUrl: anyNamed('imageUrl'),
-          wateringFrequencyDays: anyNamed('wateringFrequencyDays'),
-          lastWateredAt: anyNamed('lastWateredAt'),
-          note: anyNamed('note'),
+          waterIntervalDaysOverride: anyNamed('waterIntervalDaysOverride'),
+          fertilizerIntervalDaysOverride: anyNamed('fertilizerIntervalDaysOverride'),
+          locationId: anyNamed('locationId'),
+          notes: anyNamed('notes'),
         )).thenThrow(Exception('Update failed'));
 
         // Act

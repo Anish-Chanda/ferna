@@ -63,18 +63,20 @@ class MockPlantService extends _i1.Mock implements _i3.PlantService {
     required int? speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#createPlant, [], {
               #speciesId: speciesId,
               #nickname: nickname,
               #imageUrl: imageUrl,
-              #wateringFrequencyDays: wateringFrequencyDays,
-              #lastWateredAt: lastWateredAt,
-              #note: note,
+              #waterIntervalDaysOverride: waterIntervalDaysOverride,
+              #fertilizerIntervalDaysOverride: fertilizerIntervalDaysOverride,
+              #locationId: locationId,
+              #notes: notes,
             }),
             returnValue: _i4.Future<_i2.Plant>.value(
               _FakePlant_0(
@@ -83,9 +85,11 @@ class MockPlantService extends _i1.Mock implements _i3.PlantService {
                   #speciesId: speciesId,
                   #nickname: nickname,
                   #imageUrl: imageUrl,
-                  #wateringFrequencyDays: wateringFrequencyDays,
-                  #lastWateredAt: lastWateredAt,
-                  #note: note,
+                  #waterIntervalDaysOverride: waterIntervalDaysOverride,
+                  #fertilizerIntervalDaysOverride:
+                      fertilizerIntervalDaysOverride,
+                  #locationId: locationId,
+                  #notes: notes,
                 }),
               ),
             ),
@@ -98,9 +102,10 @@ class MockPlantService extends _i1.Mock implements _i3.PlantService {
     int? speciesId,
     String? nickname,
     String? imageUrl,
-    int? wateringFrequencyDays,
-    DateTime? lastWateredAt,
-    String? note,
+    int? waterIntervalDaysOverride,
+    int? fertilizerIntervalDaysOverride,
+    int? locationId,
+    String? notes,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#updatePlant, [], {
@@ -108,9 +113,10 @@ class MockPlantService extends _i1.Mock implements _i3.PlantService {
               #speciesId: speciesId,
               #nickname: nickname,
               #imageUrl: imageUrl,
-              #wateringFrequencyDays: wateringFrequencyDays,
-              #lastWateredAt: lastWateredAt,
-              #note: note,
+              #waterIntervalDaysOverride: waterIntervalDaysOverride,
+              #fertilizerIntervalDaysOverride: fertilizerIntervalDaysOverride,
+              #locationId: locationId,
+              #notes: notes,
             }),
             returnValue: _i4.Future<_i2.Plant>.value(
               _FakePlant_0(
@@ -120,9 +126,11 @@ class MockPlantService extends _i1.Mock implements _i3.PlantService {
                   #speciesId: speciesId,
                   #nickname: nickname,
                   #imageUrl: imageUrl,
-                  #wateringFrequencyDays: wateringFrequencyDays,
-                  #lastWateredAt: lastWateredAt,
-                  #note: note,
+                  #waterIntervalDaysOverride: waterIntervalDaysOverride,
+                  #fertilizerIntervalDaysOverride:
+                      fertilizerIntervalDaysOverride,
+                  #locationId: locationId,
+                  #notes: notes,
                 }),
               ),
             ),

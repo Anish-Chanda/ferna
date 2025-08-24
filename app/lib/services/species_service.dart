@@ -15,7 +15,7 @@ class SpeciesService {
     final dio = HttpClient.instance.dio;
     
     final response = await dio.get(
-      '/api/plants/species',
+      '/api/species',
       queryParameters: {
         'query': query,
         'limit': limit,
@@ -34,23 +34,11 @@ class SpeciesService {
   }
 
   // Get a specific species by ID
+  // Note: This endpoint doesn't exist in the current backend
+  // Use searchSpecies() instead to find species
   Future<Species?> getSpecies(int speciesId) async {
-    final dio = HttpClient.instance.dio;
-    
-    try {
-      final response = await dio.get('/api/plants/species/$speciesId');
-
-      if (response.statusCode == 200) {
-        return Species.fromJson(response.data);
-      } else if (response.statusCode == 404) {
-        return null; // Species not found
-      } else {
-        throw Exception(
-          'Failed to fetch species: HTTP ${response.statusCode}: ${response.statusMessage}',
-        );
-      }
-    } catch (e) {
-      throw Exception('Failed to fetch species: $e');
-    }
+    throw UnimplementedError(
+      'getSpecies is not implemented in the backend. Use searchSpecies() instead.'
+    );
   }
 }
