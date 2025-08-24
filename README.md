@@ -1,54 +1,47 @@
-# 🌿 Ferna  
-*A smarter, open-source way to care for your plants.*
+# Ferna
 
-Ferna is a free, open-source plant care app that helps you track, care for, and better understand your houseplants. Built for real plant people — whether you're just trying to keep your succulents alive or managing a thriving indoor jungle.
+> **STATUS**: This project is in active development and may introduce breaking changes until the v1.0.0 release. Use the project for evaluation or development. Production stability is not guaranteed yet. Expect data migrations, API changes, and breaking refactors as the project evolves.
 
----
+A practical app to help you keep your houseplants healthy.
 
-## ✨ Features
+Ferna is an open source plant care app that you can run yourself and grow with over time. It starts with the basics of tracking plants, setting reminders that can be snoozed or adjusted, and keeping notes and photos, but the long-term goal is much bigger. The project is designed around an API-first backend, making it easy to connect to other tools, build new clients, or integrate with sensors. Planned features include machine learning services for plant identification and diagnostics, so you can snap a photo to recognize a plant and get care suggestions that fit. Ferna is built to be more than a checklist app, it is meant to become a complete toolkit for plant care that stays private, extensible, and community-driven.
 
-- Personalized reminders for watering, fertilizing, and more
-- Track your plants with photos, names, and notes
-- Early diagnostic features (more in development)
-- Designed with growth in mind: future ML and sensor support
+## Key features
 
----
+- Personalized reminders for watering, fertilizing, and other care tasks
+- Photos, notes, and a timeline so you can track each plant's history
+- Early diagnostics and tooling (work in progress)
+- Modular architecture designed to support future additions: machine learning, sensors, integrations
+- API-friendly design to allow third-party integrations and custom clients
 
-## 🌱 Why Ferna?
+## Project status
 
-This started because I couldn’t keep a cactus alive — and I wanted something better to help.
+Active development. The immediate goal is a polished MVP that reliably covers tracking and reminders. After that, expect incremental improvements to diagnostics and portability.
 
-I built Ferna as a tool I could run myself, tweak if I needed to, and trust to do one thing well. Hopefully, it’s something that can help others too — especially anyone who just wants a simple, solid way to take better care of their plants.
+## High level roadmap  
 
-It’s open source because I believe tools like this should be. It’s designed to grow slowly and improve over time, shaped by people who care about plants and thoughtful software.
+- **Core**: Stable plant tracking, snoozable reminders, notes, photos, and a reliable mobile interface  
+- **Near term**: Machine learning–based plant identification, public API endpoints (auth via API keys), data export/import tools.
+- **Mid term**: Disease and health diagnostics powered by machine learning, and other features.
+- **Long term**: Sensor integrations, home automation hooks, extensible APIs for community add-ons, and internationalization  
 
----
+## Contributing
 
-## 🚧 Project Status
+Contributions are welcome. If you'd like to help:
 
-Ferna is currently in active development.  
-The MVP is shipping soon, with a strong focus on polish and usability.
+- Open an issue describing the problem or feature
+- Submit small pull requests with focused changes and tests where applicable
+- Changes to plant care information (schedules, intervals, recommended care notes) and other domain data are welcome
+- If you plan to work on larger features, open an issue first so we can coordinate
 
----
+Please add tests for new behavior when practical.
 
-## 🧭 Roadmap Highlights
+## Security & data
 
-- ✅ MVP with plant tracking and reminders
-- 🔍 ML-based plant ID and health detection
-- ☁️ Potential Hosted offering
-- 🔌 Smart sensor and home automation support
-- 🗺️ Internationalization and accessibility
+Ferna stores local data (SQLite, with optional PostgreSQL support planned). There are no external telemetry or tracking calls by default.
 
----
+## License
 
-## 🤝 Get Involved
+This project is open source. See the `LICENSE` file for details.
 
-Ferna is open source and we welcome early feedback, ideas, and contributors.  
-If you're interested in helping test or shape the direction, feel free to:
-
-- ⭐️ Star the repo
-- 🐛 Submit an issue or suggestion
----
-
-### Made by [Ferna Labs](https://fernalabs.com)  
-*Plant care, reimagined for the open world.*
+Made by [Ferna Labs](https://fernalabs.com)
