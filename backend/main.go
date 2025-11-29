@@ -3,140 +3,217 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"path/filepath"
+	"os/signal"
+	"syscall"
 	"time"
 
-	myAuth "github.com/anish-chanda/ferna/auth"
-	"github.com/anish-chanda/ferna/db"
-	"github.com/anish-chanda/ferna/db/sqlite3"
-	"github.com/anish-chanda/ferna/handlers"
-	"github.com/go-pkgz/auth/v2"
-	"github.com/go-pkgz/auth/v2/avatar"
-	"github.com/go-pkgz/auth/v2/provider"
-	"github.com/go-pkgz/auth/v2/token"
-	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/anish-chanda/ferna/internal/auth"
+	"github.com/anish-chanda/ferna/internal/db"
+	"github.com/anish-chanda/ferna/internal/handlers"
+	"github.com/anish-chanda/ferna/internal/logger"
+	"github.com/anish-chanda/ferna/migrations"
+	"github.com/go-pkgz/auth/avatar"
+	"github.com/go-pkgz/auth/provider"
+	"github.com/go-pkgz/auth/token"
+	authpkg "github.com/go-pkgz/auth/v2"
 )
 
+// App holds the application dependencies
+type App struct {
+	config *Config
+	logger *logger.ServiceLogger
+	db     *db.PostgresDB
+	server *http.Server
+	auth   *authpkg.Service
+}
+
 func main() {
-	// load env vars
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET environment variable is not set")
+	// Load configuration
+	config, err := LoadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
+		os.Exit(1)
 	}
 
-	baseUrl := os.Getenv("BASE_URL")
-	if baseUrl == "" {
-		log.Println("BASE_URL environment variable is not set, defaulting to http://localhost:8080")
-		baseUrl = "http://localhost:8080"
-	}
+	// Initialize logger
+	appLogger := logger.New(config.Logger)
+	logger.SetGlobalLogger(config.Logger)
 
-	// Prepare data directory
-	dataDir := "./data"
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
-	}
+	appLogger.Infof("Configuration loaded - Port: %d", config.APIPort)
 
 	// Initialize database
-	dbPath := filepath.Join(dataDir, "ferna.db")
-	dsn := fmt.Sprintf("file:%s?_foreign_keys=ON&parseTime=true", dbPath)
+	ctx := context.Background()
 
-	// Connect & migrate
-	fmt.Println("Migrating database...")
-	var database db.Database = sqlite3.NewSQLiteDB()
-	if err := database.Connect(dsn); err != nil {
-		log.Fatalf("connect database: %v", err)
+	database, err := db.NewPostgresDB(ctx, config.Database, appLogger)
+	if err != nil {
+		appLogger.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer database.Close()
 
-	if err := database.Migrate(); err != nil {
-		log.Fatalf("run migrations: %v", err)
+	// Run database migrations
+	if err := migrations.RunMigrations(ctx, database.Pool, appLogger); err != nil {
+		appLogger.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	fmt.Println("Database connected and migrated successfully!")
+	// Create application instance
+	app := &App{
+		config: config,
+		logger: appLogger,
+		db:     database,
+	}
 
-	// setup auth options
-	authOptions := auth.Opts{
-		SecretReader: token.SecretFunc(func(id string) (string, error) { // secret key for JWT
-			return jwtSecret, nil
+	// Setup auth service
+	app.setupAuthService()
+
+	// Setup HTTP server
+	if err := app.setupServer(); err != nil {
+		appLogger.Fatalf("Failed to setup server: %v", err)
+	}
+
+	// Start server with graceful shutdown
+	if err := app.start(); err != nil {
+		app.logger.Fatalf("Server error: %v", err)
+	}
+}
+
+// setupServer configures the HTTP server and routes
+func (app *App) setupServer() error {
+	// Create HTTP mux for routing
+	mux := http.NewServeMux()
+
+	// Health check endpoint
+	mux.HandleFunc("GET /health", app.healthCheckHandler)
+
+	// Auth endpoints
+	mux.HandleFunc("POST /api/auth/signup", handlers.SignupHandler(app.db, app.logger))
+
+	// Mount auth service routes (auth handler and avatar handler)
+	authHandler, avatarHandler := app.auth.Handlers()
+	mux.Handle("/auth/", http.StripPrefix("/auth", authHandler))
+	mux.Handle("/avatar/", http.StripPrefix("/avatar", avatarHandler))
+
+	// Configure server
+	app.server = &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", app.config.Host, app.config.APIPort),
+		Handler:      mux,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	return nil
+}
+
+// setupAuthService configures the authentication service
+func (app *App) setupAuthService() {
+	// Setup auth options
+	authOptions := authpkg.Opts{
+		SecretReader: token.SecretFunc(func(id string) (string, error) {
+			return app.config.Auth.JWTSecret, nil
 		}),
-		TokenDuration:  time.Minute * 5, // token expires in 5 minutes
-		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
+		TokenDuration:  time.Duration(app.config.Auth.TokenDuration) * time.Minute,
+		CookieDuration: time.Duration(app.config.Auth.CookieDuration) * time.Hour,
 		Issuer:         "ferna",
-		URL:            baseUrl,
-		DisableXSRF:    true,
-		ClaimsUpd: token.ClaimsUpdFunc(func(cl token.Claims) token.Claims {
-			if cl.User.Name == "" {
-				return cl
-			}
-			u, err := database.GetUserByEmail(context.TODO(), cl.User.Name)
-			if err != nil || u == nil {
-				return cl
-			}
-			cl.User.SetStrAttr("uid", fmt.Sprint(u.ID))
-			return cl
+		AudienceReader: token.AudienceFunc(func() ([]string, error) {
+			return []string{"ferna-mobile"}, nil
 		}),
-		AvatarStore: avatar.NewLocalFS("/tmp"),
+		URL:         app.config.Auth.BaseURL,
+		DisableXSRF: app.config.Auth.DisableXSRF,
+		AvatarStore: avatar.NewLocalFS(app.config.Auth.AvatarPath),
 	}
 
-	// create auth service with providers
-	authService := auth.NewService(authOptions)
-	authService.AddDirectProvider("local", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
-		return myAuth.HandleLogin(database, user, password)
+	app.auth = authpkg.NewService(authOptions)
+
+	// Add local provider for credential checking
+	app.auth.AddDirectProvider("local", provider.CredCheckerFunc(func(user, passwd string) (ok bool, err error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Get user from database
+		dbUser, err := app.db.GetUserByEmail(ctx, user)
+		if err != nil {
+			app.logger.Debugf("Error getting user for auth: %v", err)
+			return false, err
+		}
+		if dbUser == nil {
+			app.logger.Debugf("User not found for auth: %s", user)
+			return false, nil
+		}
+
+		// Check if user is local auth provider and has password
+		if dbUser.AuthProvider != "local" || dbUser.PasswordHash == nil {
+			app.logger.Debugf("User is not local auth provider: %s", user)
+			return false, nil
+		}
+
+		// Verify password using internal auth package
+		valid, err := auth.VerifyPassword(passwd, *dbUser.PasswordHash)
+		if err != nil {
+			app.logger.Debugf("Password verification error: %v", err)
+			return false, err
+		}
+
+		if valid {
+			app.logger.Infof("User authenticated successfully: %s", user)
+		} else {
+			app.logger.Debugf("Invalid password for user: %s", user)
+		}
+
+		return valid, nil
 	}))
+}
 
-	r := mux.NewRouter()
+// start starts the server with graceful shutdown
+func (app *App) start() error {
+	// Channel to listen for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// register routes
-	r.HandleFunc("/auth/local/signup", func(w http.ResponseWriter, r *http.Request) {
-		myAuth.HandleSignup(database, w, r)
-	}).Methods("POST")
+	// Start server in a goroutine
+	go func() {
+		app.logger.Infof("Server starting on %s", app.server.Addr)
+		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			app.logger.Errorf("Server failed to start: %v", err)
+			quit <- syscall.SIGTERM
+		}
+	}()
 
-	// setup auth routes
-	authRoutes, avaRoutes := authService.Handlers()
-	r.PathPrefix("/auth").Handler(authRoutes)
-	r.PathPrefix("/avatar").Handler(avaRoutes)
+	// Wait for interrupt signal
+	<-quit
+	app.logger.Info("Server shutdown signal received...")
 
-	// create middleware and mount api endpoints
-	authMiddleware := authService.Middleware()
-	apiRouter := r.PathPrefix("/api").Subrouter()
-	apiRouter.Use(authMiddleware.Auth)
+	// Create a deadline for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	// species routes
-	apiRouter.HandleFunc("/species", handlers.SearchSpecies(database)).Methods("GET")
+	// handle other cleanup tasks here
 
-	// location routes
-	apiRouter.HandleFunc("/locations", handlers.CreateLocation(database)).Methods("POST")
-	apiRouter.HandleFunc("/locations", handlers.ListLocations(database)).Methods("GET")
-	apiRouter.HandleFunc("/locations/{id}", handlers.GetLocation(database)).Methods("GET")
-	apiRouter.HandleFunc("/locations/{id}", handlers.UpdateLocation(database)).Methods("PATCH")
-	apiRouter.HandleFunc("/locations/{id}", handlers.DeleteLocation(database)).Methods("DELETE")
+	// Attempt graceful shutdown
+	if err := app.server.Shutdown(ctx); err != nil {
+		app.logger.Errorf("Server forced to shutdown: %v", err)
+		return err
+	}
 
-	// user plant routes
-	apiRouter.HandleFunc("/plants", handlers.CreateUserPlant(database)).Methods("POST")
-	apiRouter.HandleFunc("/plants", handlers.ListUserPlants(database)).Methods("GET")
-	apiRouter.HandleFunc("/plants/{id}", handlers.GetUserPlant(database)).Methods("GET")
-	apiRouter.HandleFunc("/plants/{id}", handlers.UpdateUserPlant(database)).Methods("PATCH")
-	apiRouter.HandleFunc("/plants/{id}", handlers.DeleteUserPlant(database)).Methods("DELETE")
+	app.logger.Info("Server exited")
+	return nil
+}
 
-	// plant task routes
-	apiRouter.HandleFunc("/plants/{plantId}/tasks", handlers.CreatePlantTask(database)).Methods("POST")
-	apiRouter.HandleFunc("/plants/{plantId}/tasks", handlers.GetPlantTasksByPlantID(database)).Methods("GET")
-	apiRouter.HandleFunc("/tasks/{id}", handlers.GetPlantTask(database)).Methods("GET")
-	apiRouter.HandleFunc("/tasks/{id}", handlers.UpdatePlantTask(database)).Methods("PATCH")
-	apiRouter.HandleFunc("/tasks/{id}", handlers.DeletePlantTask(database)).Methods("DELETE")
-	apiRouter.HandleFunc("/tasks/overdue", handlers.GetOverdueTasks(database)).Methods("GET")
+// HTTP Handlers
 
-	// care event routes
-	apiRouter.HandleFunc("/plants/{plantId}/events", handlers.CreateCareEvent(database)).Methods("POST")
-	apiRouter.HandleFunc("/plants/{plantId}/events", handlers.GetCareEventsByPlantID(database)).Methods("GET")
-	apiRouter.HandleFunc("/events/{id}", handlers.GetCareEvent(database)).Methods("GET")
-	apiRouter.HandleFunc("/events/{id}", handlers.UpdateCareEvent(database)).Methods("PATCH")
-	apiRouter.HandleFunc("/events/{id}", handlers.DeleteCareEvent(database)).Methods("DELETE")
+// healthCheckHandler provides a simple health check endpoint
+func (app *App) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
-	fmt.Println("Server is running on port 8080...")
-	http.ListenAndServe(":8080", r)
+	response := fmt.Sprintf(`{
+		"status": "healthy",
+		"service": "%s",
+		"timestamp": "%s"
+	}`, app.config.Logger.Service, time.Now().UTC().Format(time.RFC3339))
+
+	w.Write([]byte(response))
+
+	app.logger.Debug("Health check accessed")
 }
